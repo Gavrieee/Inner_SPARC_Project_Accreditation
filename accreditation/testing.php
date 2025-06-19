@@ -5,20 +5,15 @@ require_once 'core/models.php';
 $sheetId = '1jAxVlt4_tM1s2db22RbBobyxi6Wqla2kHb6UTRZDEJA';
 $gid = '1410707098';
 $url = "https://docs.google.com/spreadsheets/d/$sheetId/gviz/tq?tqx=out:csv&gid=$gid";
-// $pdo = connectDB();
 
 // USE THIS TO RESET INDEX
 // TRUNCATE TABLE manual_data;
 
-
-// Step 1: Merge Google Sheet to DB
-// mergeGoogleSheetToDB($pdo, $url);
-
-// Step 2: Fetch all data from database
+// Fetch all data from database
 $stmt = $pdo->query("SELECT * FROM manual_data ORDER BY datetime ASC");
 $dbResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Step 3: Process data for grouped view
+// Process data for grouped view
 $data = [];
 
 foreach ($dbResults as $row) {
@@ -99,10 +94,7 @@ $hover_blue_number = $default_blue_number + 100;
 <body class="bg-gray-100 text-gray-800 py-6 px-[20%]">
 
     <!-- ENCODING form -->
-
     <section class="bg-white rounded-2xl shadow p-6 mb-6 mx-[20%] min-w-[30%]">
-
-
         <div class="flex justify-center items-center bg-blue-1001 pt-4">
 
             <div class="bg-red-3001 w-full px-10 h-fit flex justify-center items-center">
@@ -114,13 +106,11 @@ $hover_blue_number = $default_blue_number + 100;
                     </div>
 
                     <!-- LINE -->
-                    <!-- <hr class="my-4 border-1.5 border-none border-blue-<?= $default_blue_number; ?>"> -->
                     <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-blue-<?= $default_blue_number; ?>">
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                         <!-- SECOND DIV -->
-
                         <input type="text" name="name" placeholder="Full Name"
                             class="pl-2 w-full border-b border-1.5 p-[4px] border-blue-<?= $default_blue_number; ?> focus:outline-none focus:border-blue-<?= $default_blue_number; ?> bg-transparent"
                             required>
@@ -143,12 +133,10 @@ $hover_blue_number = $default_blue_number + 100;
                             ?>
                         </select>
 
-
                         <!-- THIRD DIV -->
                         <label for="datetime" class="block">
                             <input type="datetime-local" name="datetime"
                                 class="w-full p-[4px] rounded-md pl-2 border border-1 border-blue-<?= $default_blue_number; ?> focus:outline-none1 focus:outline- focus:border-blue-<?= $default_blue_number; ?> bg-transparent focus-within:outline-2 focus-within:outline-blue-<?= $default_blue_number; ?> appearance-none">
-                            <!-- <span class="text italic text-gray-700">Optional</span> -->
                         </label>
 
                         <select name="toggle"
@@ -159,22 +147,16 @@ $hover_blue_number = $default_blue_number + 100;
                         </select>
                     </div>
 
-
                     <!-- FOURTH DIV -->
                     <button type="submit" name="insertData"
                         class="py-2 mt-4 bg-blue-<?= $default_blue_number; ?> w-full text-white rounded-lg hover:bg-blue-<?= $hover_blue_number; ?> hover:shadow-mg">Add
                         this
                         Entry
                     </button>
-
                 </form>
             </div>
-
         </div>
     </section>
-
-
-
 
     <div class="flex flex-wrap items-center text-gray-700 gap-4 mb-4 py-3">
         <span class="text-lg font-bold">Team</span>
@@ -195,20 +177,15 @@ $hover_blue_number = $default_blue_number + 100;
     </div>
 
     <label class="block mb-4">
-
-
         <div class="flex justify-between items-center gap-2 mb-2 text-md">
-
             <div>
                 <span class="text-gray-700 font-bold">Filter by Month:
-
                     <select onchange="filterByMonth(this.value)"
                         class="font-bold mb-6 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
                         <?php foreach (array_keys($data) as $month): ?>
                         <option value="<?= $month ?>"><?= $month ?></option>
                         <?php endforeach; ?>
                     </select>
-
                 </span>
             </div>
 
@@ -221,9 +198,6 @@ $hover_blue_number = $default_blue_number + 100;
                 </form>
             </div>
         </div>
-
-
-
     </label>
 
     <?php foreach ($data as $month => $teams): ?>
@@ -232,27 +206,20 @@ $hover_blue_number = $default_blue_number + 100;
 
         <!-- display month -->
         <h2 class="text-[32px] font-bold mb-6 text-center text-blue-<?= $default_blue_number; ?>"><?= $month ?></h2>
-
         <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
-
             <h3 class="text-xl font-semibold my-2">Legend</h3>
-
             <hr>
-
             <div class="flex flex-col justify-center items-center gap-4 my-4 md:flex-row sm:gap-4">
-
                 <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 text-center gap-2"
                     title="Finished Accreditation">
                     <?= $svg['check'] ?>
                     <span class="ml-2">Finished Accreditation</span>
                 </div>
-
                 <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 text-center gap-2"
                     title="Cancelled Accreditation">
                     <?= $svg['x_mark'] ?>
                     <span class="ml-2">Cancelled Accreditation</span>
                 </div>
-
                 <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 text-center gap-2"
                     title="No response from Agent">
                     <?php echo str_replace('bg-red-500', 'text-gray-500', $svg['signal_lost']);
@@ -267,9 +234,7 @@ $hover_blue_number = $default_blue_number + 100;
 
             <!-- display team -->
             <h3 class="text-xl font-semibold my-2"><?= htmlspecialchars($team) ?></h3>
-
             <hr>
-
             <div class="grid grid-cols-[80px_repeat(5,_1fr)] gap-4 py-4 hidden md:grid">
                 <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
                     <div class="font-bold">Marks</div>
@@ -300,7 +265,6 @@ $hover_blue_number = $default_blue_number + 100;
                 </div>
                 <?php endforeach; ?>
 
-
                 <!-- this will show TOTAL per marks -->
                 <div
                     class="rounded-xl py-2 text-center flex w-full h-full flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white">
@@ -318,12 +282,6 @@ $hover_blue_number = $default_blue_number + 100;
                             $total_x = 0;
                             $total_blank = 0;
 
-                            // foreach ($quarters as $q) {
-                            //     $total_check += $q['1'] ?? 0;
-                            //     $total_x += $q['0'] ?? 0;
-                            //     $total_blank += $q['blank'] ?? 0;
-                            // }
-                    
                             foreach ($quarters as $quarter_name => $counts) {
                                 $total_check += $counts['1'] ?? 0;
                                 $total_x += $counts['0'] ?? 0;
@@ -331,7 +289,6 @@ $hover_blue_number = $default_blue_number + 100;
 
                                 $totals_by_quarter[$quarter_name] += ($counts['1'] ?? 0) + ($counts['0'] ?? 0) + ($counts['blank'] ?? 0);
                             }
-
 
                             // Grand total (sum of all marks)
                             $grand_total = $total_check + $total_x + $total_blank;
@@ -355,7 +312,6 @@ $hover_blue_number = $default_blue_number + 100;
                             <?= $total_blank ?>
                         </span>
                     </div>
-
                 </div>
 
                 <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
