@@ -2,120 +2,6 @@
 
 require_once 'dbConfig.php';
 
-// function insertManualData(PDO $pdo, $datetime = '', $name, $team, $toggle)
-// {
-//     try {
-//         if (!empty($datetime)) {
-//             $stmt = $pdo->prepare("INSERT INTO manual_data (datetime, name, team, toggle) VALUES (?, ?, ?, ?)");
-//             $stmt->execute([$datetime, $name, $team, $toggle]);
-//         } else {
-//             $stmt = $pdo->prepare("INSERT INTO manual_data (datetime, name, team, toggle) VALUES (NOW(), ?, ?, ?)");
-//             $stmt->execute([$name, $team, $toggle]);
-//         }
-
-//         return true; // success
-//     } catch (PDOException $e) {
-//         error_log("Insert error: " . $e->getMessage());
-//         return false; // fail
-//     }
-// }
-
-
-// function mergeGoogleSheetToDB(PDO $pdo, string $url): void
-// {
-//     // Get CSV data from Google Sheets
-//     $csvData = file_get_contents($url);
-//     if ($csvData === false)
-//         return;
-
-//     $rows = array_map('str_getcsv', explode("\n", $csvData));
-//     if (count($rows) <= 1)
-//         return;
-
-//     // Prepare statement to avoid duplicates
-//     $stmt = $pdo->prepare("
-//         INSERT INTO manual_data (datetime, name, team, toggle)
-//         SELECT ?, ?, ?, ?
-//         FROM DUAL
-//         WHERE NOT EXISTS (
-//             SELECT 1 FROM manual_data
-//             WHERE datetime = ? AND name = ? AND team = ? AND toggle = ?
-//         )
-//     ");
-
-//     for ($i = 1; $i < count($rows); $i++) {
-//         $row = $rows[$i];
-
-//         // Skip empty or malformed rows
-//         if (!isset($row[0], $row[1], $row[2]))
-//             continue;
-
-//         $datetimeRaw = trim($row[0]);
-
-//         // Convert Sheet format '1/29/2025 17:02:54' → MySQL format '2025-01-29 17:02:54'
-//         // $datetimeObj = DateTime::createFromFormat('n/j/Y H:i:s', $datetimeRaw);
-//         $datetimeObj = DateTime::createFromFormat('n/j/Y h:i:s A', $datetimeRaw);
-
-//         if (!$datetimeObj)
-//             continue;
-
-//         $datetime = $datetimeObj->format('Y-m-d H:i:s');
-//         $name = trim($row[1] ?? '');
-//         $team = trim($row[2] ?? '');
-//         $toggle = trim($row[3] ?? '');
-
-//         if (empty($datetime) || empty($team))
-//             continue;
-
-//         // Execute prepared insert with duplication check
-//         $stmt->execute([
-//             $datetime,
-//             $name,
-//             $team,
-//             $toggle,  // for insert
-//             $datetime,
-//             $name,
-//             $team,
-//             $toggle   // for duplication check
-//         ]);
-//     }
-// }
-
-// function mergeGoogleSheetToDB(PDO $pdo, string $url): void
-// {
-//     if (($handle = fopen($url, 'r')) === false) {
-//         die("Failed to open Google Sheets CSV.");
-//     }
-
-//     fgetcsv($handle); // Skip header
-
-//     while (($row = fgetcsv($handle)) !== false) {
-//         $datetimeStr = $row[0] ?? '';
-//         $name = trim($row[1] ?? '');
-//         $team = trim($row[2] ?? '');
-//         $toggle = trim($row[3] ?? '');
-
-//         // Try to parse the datetime string in the sheet format
-//         $date = DateTime::createFromFormat('n/j/Y H:i:s', $datetimeStr);
-//         if (!$date)
-//             continue;
-
-//         $datetime = $date->format('Y-m-d H:i:s'); // Convert to DB format
-
-//         // Avoid duplicate inserts
-//         $stmt = $pdo->prepare("SELECT COUNT(*) FROM manual_data WHERE datetime = ? AND team = ?");
-//         $stmt->execute([$datetime, $team]);
-//         if ($stmt->fetchColumn() > 0)
-//             continue;
-
-//         // Insert with name even if not shown in frontend
-//         $insert = $pdo->prepare("INSERT INTO manual_data (datetime, name, team, toggle) VALUES (?, ?, ?, ?)");
-//         $insert->execute([$datetime, $name, $team, $toggle]);
-//     }
-
-//     fclose($handle);
-// }
-
 function mergeGoogleSheetToDB($pdo, $url)
 {
     if (($handle = fopen($url, 'r')) === false)
@@ -145,4 +31,70 @@ function mergeGoogleSheetToDB($pdo, $url)
     }
 
     fclose($handle);
+}
+
+function getToggleDataByTeamAndMonth(PDO $pdo)
+{
+    $query = "
+        SELECT 
+            team,
+            MONTH(datetime) AS month,
+            toggle,
+            COUNT(*) AS count
+        FROM manual_data
+        GROUP BY team, month, toggle
+    ";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
+
+    $data = [];
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $toggle = $row['toggle'];
+        $team = $row['team'];
+        $month = (int) $row['month']; // 1 to 12
+        $count = (int) $row['count'];
+
+        // Initialize structure if not set
+        if (!isset($data[$toggle][$team])) {
+            $data[$toggle][$team] = array_fill(1, 12, 0);
+        }
+
+        $data[$toggle][$team][$month] = $count;
+    }
+
+    return $data;
+}
+
+function getToggleDataByTeamPerMonth(PDO $pdo): array
+{
+    $stmt = $pdo->query("
+        SELECT 
+            toggle,
+            team,
+            MONTH(datetime) AS month,
+            COUNT(*) AS count
+        FROM manual_data
+        GROUP BY toggle, team, MONTH(datetime)
+        ORDER BY toggle, team, MONTH(datetime)
+    ");
+
+    $data = [];
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $toggle = $row['toggle'];
+        $team = $row['team'];
+        $month = (int) $row['month'];
+        $count = (int) $row['count'];
+
+        // Initialize team if not set
+        if (!isset($data[$toggle][$team])) {
+            $data[$toggle][$team] = array_fill(1, 12, 0);
+        }
+
+        $data[$toggle][$team][$month] = $count;
+    }
+
+    return $data;
 }

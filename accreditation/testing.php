@@ -72,6 +72,53 @@ $svg = [
 $default_blue_number = '800';
 $hover_blue_number = $default_blue_number + 100;
 
+$dataToggleTeamMonth = getToggleDataByTeamAndMonth($pdo);
+
+$months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+];
+
+// Optional: labels for toggles
+$toggleLabels = [
+    '1' => '<div class="flex pt-2 items-center gap-2 text-green-600 font-semibold">'
+        . $svg['check'] . '<span>Finished Accreditation</span></div>',
+
+    '0' => '<div class="flex pt-2 items-center gap-2 text-red-600 font-semibold">'
+        . $svg['x_mark'] . '<span>Cancelled Accreditation</span></div>',
+
+    '' => '<div class="flex pt-2 items-center gap-2 text-yellow-600 font-semibold">'
+        . $svg['signal_lost'] . '<span>No Response from Agent</span></div>',
+];
+
+
+
+$dataTeamPerMonth = getToggleDataByTeamPerMonth($pdo);
+$monthsIndex = [
+    1 => "January",
+    2 => "February",
+    3 => "March",
+    4 => "April",
+    5 => "May",
+    6 => "June",
+    7 => "July",
+    8 => "August",
+    9 => "September",
+    10 => "October",
+    11 => "November",
+    12 => "December"
+];
+
 ?>
 
 <!DOCTYPE html>
@@ -80,14 +127,15 @@ $hover_blue_number = $default_blue_number + 100;
 <head>
     <meta charset="UTF-8">
     <title>Toggle Tracker</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-    function filterByMonth(month) {
-        document.querySelectorAll('.month-group').forEach(el => {
-            el.classList.add('hidden');
-        });
-        document.getElementById(`month-${month}`).classList.remove('hidden');
-    }
+        function filterByMonth(month) {
+            document.querySelectorAll('.month-group').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.getElementById(`month-${month}`).classList.remove('hidden');
+        }
     </script>
 </head>
 
@@ -126,8 +174,8 @@ $hover_blue_number = $default_blue_number + 100;
                                         continue;
                                     $printedTeams[] = $team;
                                     ?>
-                            <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
-                            <?php
+                                    <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
+                                    <?php
                                 endforeach;
                             endforeach;
                             ?>
@@ -168,9 +216,9 @@ $hover_blue_number = $default_blue_number + 100;
                     continue;
                 $printedTeams[] = $team;
                 ?>
-        <span
-            class="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg shadow-sm hover:-translate-y-1 transition-all ease-in-out"><?= htmlspecialchars($team) ?></span>
-        <?php
+                <span
+                    class="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg shadow-sm hover:-translate-y-1 transition-all ease-in-out"><?= htmlspecialchars($team) ?></span>
+                <?php
             endforeach;
         endforeach;
         ?>
@@ -183,7 +231,7 @@ $hover_blue_number = $default_blue_number + 100;
                     <select onchange="filterByMonth(this.value)"
                         class="font-bold mb-6 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
                         <?php foreach (array_keys($data) as $month): ?>
-                        <option value="<?= $month ?>"><?= $month ?></option>
+                            <option value="<?= $month ?>"><?= $month ?></option>
                         <?php endforeach; ?>
                     </select>
                 </span>
@@ -201,76 +249,153 @@ $hover_blue_number = $default_blue_number + 100;
     </label>
 
     <?php foreach ($data as $month => $teams): ?>
-    <div id="month-<?= $month ?>"
-        class="month-group <?= $month !== array_key_first($data) ? 'hidden' : '' ?> text-gray-700">
+        <div id="month-<?= $month ?>"
+            class="month-group <?= $month !== array_key_first($data) ? 'hidden' : '' ?> text-gray-700">
 
-        <!-- display month -->
-        <h2 class="text-[32px] font-bold mb-6 text-center text-blue-<?= $default_blue_number; ?>"><?= $month ?></h2>
-        <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
-            <h3 class="text-xl font-semibold my-2">Legend</h3>
-            <hr>
-            <div class="flex flex-col justify-center items-center gap-4 my-4 md:flex-row sm:gap-4">
-                <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 text-center gap-2"
-                    title="Finished Accreditation">
-                    <?= $svg['check'] ?>
-                    <span class="ml-2">Finished Accreditation</span>
-                </div>
-                <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 text-center gap-2"
-                    title="Cancelled Accreditation">
-                    <?= $svg['x_mark'] ?>
-                    <span class="ml-2">Cancelled Accreditation</span>
-                </div>
-                <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 text-center gap-2"
-                    title="No response from Agent">
-                    <?php echo str_replace('bg-red-500', 'text-gray-500', $svg['signal_lost']);
+            <!-- display month -->
+            <h2 class="text-[32px] font-bold mb-6 text-center text-blue-<?= $default_blue_number; ?>"><?= $month ?></h2>
+            <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
+                <h3 class="text-xl font-semibold my-2">Legend</h3>
+                <hr>
+                <div class="flex flex-col justify-center items-center gap-4 my-4 md:flex-row sm:gap-4">
+                    <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
+                        title="Finished Accreditation">
+                        <?= $svg['check'] ?>
+                        <span class="ml-2">Finished Accreditation</span>
+                    </div>
+                    <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
+                        title="Cancelled Accreditation">
+                        <?= $svg['x_mark'] ?>
+                        <span class="ml-2">Cancelled Accreditation</span>
+                    </div>
+                    <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
+                        title="No response from Agent">
+                        <?php echo str_replace('bg-red-500', 'text-gray-500', $svg['signal_lost']);
                         ?>
-                    <span class="ml-2">No response from Agent</span>
+                        <span class="ml-2">No response from Agent</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <?php foreach ($teams as $team => $quarters): ?>
-        <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
+            <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6">
 
-            <!-- display team -->
-            <h3 class="text-xl font-semibold my-2"><?= htmlspecialchars($team) ?></h3>
-            <hr>
-            <div class="grid grid-cols-[80px_repeat(5,_1fr)] gap-4 py-4 hidden md:grid">
-                <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
-                    <div class="font-bold">Marks</div>
-                    <div class="flex justify-center items-center gap-2">
-                        <button class="flex justify-center items-center font-bold" title="Finished Accreditation">
-                            <?= $svg['check'] ?>
-                        </button>
+                <?php foreach ($dataTeamPerMonth as $toggle => $team_s): ?>
+
+                    <!-- Full-width Toggle label -->
+                    <div class="mb-2">
+                        <h2 class="text-xl font-bold">
+                            <?= $toggleLabels[$toggle] ?? 'Unknown' ?>
+                        </h2>
+                        <hr class="h-px my-4 mt-2">
                     </div>
-                    <div class="flex justify-center items-center gap-2">
-                        <button class="flex justify-center items-center font-bold" title="Cancelled Accreditation">
-                            <?= $svg['x_mark'] ?>
-                        </button>
-                    </div>
-                    <div class="flex justify-center items-center gap-2">
-                        <button class="flex justify-center items-center font-bold" title="No Response from Agent">
-                            <?= $svg['signal_lost'] ?>
-                        </button>
-                    </div>
-                </div>
 
-                <?php foreach (['Week 1', 'Week 2', 'Week 3', 'Week 4'] as $q): ?>
-                <div class="border rounded-xl p-2 text-center bg-gray-50 flex flex-col gap-4 ">
-                    <div class="font-bold"><?= $q ?></div>
 
-                    <div class=""><?= $quarters[$q]['1'] ?? 0 ?></div>
-                    <div class=""><?= $quarters[$q]['0'] ?? 0 ?></div>
-                    <div class=""><?= $quarters[$q]['blank'] ?? 0 ?></div>
-                </div>
+                    <!-- 3-column grid -->
+                    <div class="grid grid-cols-[auto,3fr,auto] gap-4 mb-4">
+                        <!-- Teams per toggle -->
+                        <div class="">
+                            <div class="bg-white border rounded-xl p-2 px-4 text-center flex flex-col gap-4 overflow-x-auto">
+                                <div class="font-bold">Teams</div>
+                                <?php foreach (array_keys($team_s) as $team): ?>
+                                    <div class=""><?= htmlspecialchars($team) ?></div>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div class="font-bold border rounded-xl p-2 mt-4 text-center bg-white flex flex-col gap-4">
+                                Total
+                            </div>
+                        </div>
+
+                        <!-- Month grid -->
+                        <div class="w-full bg-white overflow-x-auto text-gray-700 hide-scrollbar rounded-xl">
+                            <div class="flex gap-4 min-w-max">
+                                <?php for ($m = 1; $m <= 12; $m++): ?>
+                                    <div class="w-[130px]">
+                                        <div
+                                            class="bg-gray-50 border rounded-xl p-2 text-center flex flex-col justify-evenly items-center gap-4">
+                                            <div class="font-bold"><?= $monthsIndex[$m] ?></div>
+                                            <?php
+                                            $monthTotal = 0;
+                                            foreach ($team_s as $team => $count_s):
+                                                $count = $count_s[$m] ?? 0;
+                                                $monthTotal += $count;
+                                                ?>
+                                                <p class=""><?= $count ?></p>
+                                            <?php endforeach; ?>
+                                        </div>
+
+                                        <div
+                                            class="font-semibold border rounded-xl p-2 mt-4 text-center bg-white flex flex-col gap-4">
+                                            <?= $monthTotal ?>
+                                        </div>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+
+                        <!-- Grand total -->
+                        <div class="text-white">
+                            <div
+                                class="bg-blue-<?= $default_blue_number; ?> border rounded-xl p-2 px-4 text-center flex flex-col gap-4 overflow-x-auto">
+                                <div class="font-bold">Year Total</div>
+                                <?php foreach ($team_s as $team => $count_s): ?>
+                                    <div class=""><?= array_sum($count_s) ?></div>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div
+                                class="font-bold border rounded-xl p-2 mt-4 text-center bg-blue-<?= $default_blue_number; ?> flex flex-col gap-4">
+                                <?= array_sum(array_map('array_sum', $team_s)) ?>
+                            </div>
+                        </div>
+                    </div>
+
                 <?php endforeach; ?>
 
-                <!-- this will show TOTAL per marks -->
-                <div
-                    class="rounded-xl py-2 text-center flex w-full h-full flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white">
-                    <div class="font-bold">Total</div>
+            </div>
 
-                    <?php
+            <?php foreach ($teams as $team => $quarters): ?>
+                <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
+
+                    <!-- display team -->
+                    <h3 class="text-xl font-semibold my-2"><?= htmlspecialchars($team) ?></h3>
+                    <hr>
+                    <div class="grid grid-cols-[80px_repeat(5,_1fr)] gap-4 py-4 hidden md:grid">
+                        <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
+                            <div class="font-bold">Marks</div>
+                            <div class="flex justify-center items-center gap-2">
+                                <button class="flex justify-center items-center font-bold" title="Finished Accreditation">
+                                    <?= $svg['check'] ?>
+                                </button>
+                            </div>
+                            <div class="flex justify-center items-center gap-2">
+                                <button class="flex justify-center items-center font-bold" title="Cancelled Accreditation">
+                                    <?= $svg['x_mark'] ?>
+                                </button>
+                            </div>
+                            <div class="flex justify-center items-center gap-2">
+                                <button class="flex justify-center items-center font-bold" title="No Response from Agent">
+                                    <?= $svg['signal_lost'] ?>
+                                </button>
+                            </div>
+                        </div>
+
+                        <?php foreach (['Week 1', 'Week 2', 'Week 3', 'Week 4'] as $q): ?>
+                            <div class="border rounded-xl p-2 text-center bg-gray-50 flex flex-col gap-4 ">
+                                <div class="font-bold"><?= $q ?></div>
+
+                                <div class=""><?= $quarters[$q]['1'] ?? 0 ?></div>
+                                <div class=""><?= $quarters[$q]['0'] ?? 0 ?></div>
+                                <div class=""><?= $quarters[$q]['blank'] ?? 0 ?></div>
+                            </div>
+                        <?php endforeach; ?>
+
+                        <!-- this will show TOTAL per marks -->
+                        <div
+                            class="rounded-xl py-2 text-center flex w-full h-full flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white">
+                            <div class="font-bold">Month Total</div>
+
+                            <?php
                             $totals_by_quarter = [
                                 'Week 1' => 0,
                                 'Week 2' => 0,
@@ -294,50 +419,51 @@ $hover_blue_number = $default_blue_number + 100;
                             $grand_total = $total_check + $total_x + $total_blank;
                             ?>
 
-                    <div class="hover:bg-white group">
-                        <span
-                            class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
-                            <?= $total_check ?>
-                        </span>
-                    </div>
-                    <div class="hover:bg-white group">
-                        <span
-                            class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
-                            <?= $total_x ?>
-                        </span>
-                    </div>
-                    <div class="hover:bg-white group">
-                        <span
-                            class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
-                            <?= $total_blank ?>
-                        </span>
-                    </div>
-                </div>
+                            <div class="hover:bg-white group">
+                                <span
+                                    class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
+                                    <?= $total_check ?>
+                                </span>
+                            </div>
+                            <div class="hover:bg-white group">
+                                <span
+                                    class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
+                                    <?= $total_x ?>
+                                </span>
+                            </div>
+                            <div class="hover:bg-white group">
+                                <span
+                                    class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
+                                    <?= $total_blank ?>
+                                </span>
+                            </div>
+                        </div>
 
-                <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
-                    <div class="font-bold">Total</div>
-                </div>
-                <div class="border font-semibold rounded-xl p-2 text-center">
-                    <?= $totals_by_quarter['Week 1'] ?>
-                </div>
-                <div class="border font-semibold rounded-xl p-2 text-center">
-                    <?= $totals_by_quarter['Week 2'] ?>
-                </div>
-                <div class="border font-semibold rounded-xl p-2 text-center">
-                    <?= $totals_by_quarter['Week 3'] ?>
-                </div>
-                <div class="border font-semibold rounded-xl p-2 text-center">
-                    <?= $totals_by_quarter['Week 4'] ?>
-                </div>
+                        <!-- Grand Total -->
+                        <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
+                            <div class="font-bold">Total</div>
+                        </div>
+                        <div class="border font-semibold rounded-xl p-2 text-center">
+                            <?= $totals_by_quarter['Week 1'] ?>
+                        </div>
+                        <div class="border font-semibold rounded-xl p-2 text-center">
+                            <?= $totals_by_quarter['Week 2'] ?>
+                        </div>
+                        <div class="border font-semibold rounded-xl p-2 text-center">
+                            <?= $totals_by_quarter['Week 3'] ?>
+                        </div>
+                        <div class="border font-semibold rounded-xl p-2 text-center">
+                            <?= $totals_by_quarter['Week 4'] ?>
+                        </div>
 
-                <div
-                    class="border rounded-xl p-2 text-center flex flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white font-semibold">
-                    <?= $grand_total ?>
+                        <div
+                            class="border rounded-xl p-2 text-center flex flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white font-semibold">
+                            <?= $grand_total ?>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
-    </div>
     <?php endforeach; ?>
 </body>
 
