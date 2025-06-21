@@ -93,13 +93,13 @@ $months = [
 
 // Optional: labels for toggles
 $toggleLabels = [
-    '1' => '<div class="flex pt-2 items-center gap-2 text-green-600 font-semibold">'
+    '1' => '<div class="flex pt-2 items-center gap-2 md:gap-1 text-green-600 font-semibold md:text-lg text-[14px]">'
         . $svg['check'] . '<span>Finished Accreditation</span></div>',
 
-    '0' => '<div class="flex pt-2 items-center gap-2 text-red-600 font-semibold">'
+    '0' => '<div class="flex pt-2 items-center gap-2 md:gap-1 text-red-600 font-semibold md:text-lg text-[14px]">'
         . $svg['x_mark'] . '<span>Cancelled Accreditation</span></div>',
 
-    '' => '<div class="flex pt-2 items-center gap-2 text-yellow-600 font-semibold">'
+    '' => '<div class="flex pt-2 items-center gap-2 md:gap-1 text-yellow-600 font-semibold md:text-lg text-[14px]">'
         . $svg['signal_lost'] . '<span>No Response from Agent</span></div>',
 ];
 
@@ -166,7 +166,7 @@ $monthsIndex = [
     </script>
 </head>
 
-<body class="bg-gray-100 text-gray-800 py-6 px-[20%]">
+<body class="bg-gray-100 text-gray-800 py-6 sm:px-[20%] md:px-[15%] px-[10%]">
 
     <!-- ENCODING form -->
     <section class="bg-white rounded-2xl shadow p-6 mb-6 mx-[20%] min-w-[30%]">
@@ -177,7 +177,7 @@ $monthsIndex = [
 
                     <!-- FIRST DIV -->
                     <div class="text-center">
-                        <h1 class="font-bold text-xl">Accreditation </h1>
+                        <h1 class="font-bold text-2xl text-blue-<?= $default_blue_number; ?>">Agent Accreditation</h1>
                     </div>
 
                     <!-- LINE -->
@@ -256,20 +256,18 @@ $monthsIndex = [
     </div>
 
     <label class="block mb-4">
-        <div class="flex justify-between items-center gap-2 mb-2 text-md">
-            <div class="flex gap-4 items-center">
-                <span class="text-gray-700 font-bold">Filter by Year:
+        <div class="flex flex-col md:flex-row justify-between items-center gap-1 mb-2 text-md">
+            <div class="flex gap-1 items-center">
+                <span class="text-gray-700 font-bold">Filter by
                     <select onchange="filterByYear(this.value)"
-                        class="font-bold mb-6 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
+                        class="font-bold mb-4 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
                         <?php foreach (array_keys($data) as $year): ?>
                             <option value="<?= $year ?>"><?= $year ?></option>
                         <?php endforeach; ?>
                     </select>
-                </span>
-
-                <span class="text-gray-700 font-bold">Filter by Month:
+                    and
                     <select id="month-filter" onchange="filterByMonth(this.value)"
-                        class="font-bold mb-6 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
+                        class="font-bold mb-4 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
                         <option value="all">All Months</option>
                         <?php
                         $availableMonths = [];
@@ -285,12 +283,15 @@ $monthsIndex = [
                         <?php endforeach; ?>
                     </select>
                 </span>
+
+                <!-- <span class="text-gray-700 font-bold">
+                </span> -->
             </div>
 
             <div>
                 <form method="post" action="core/sync_sheets.php">
                     <button type="submit"
-                        class="py-2 px-4 mt-4 border border-blue-<?= $default_blue_number; ?> text-blue-<?= $default_blue_number; ?> hover:bg-blue-<?= $default_blue_number; ?> w-full hover:text-white rounded-lg hover:bg-blue-<?= $default_blue_number; ?> hover:shadow-mg transition-all ease-in-out">Re-Sync
+                        class="py-2 px-4 border border-blue-<?= $default_blue_number; ?> text-blue-<?= $default_blue_number; ?> hover:bg-blue-<?= $default_blue_number; ?> w-full hover:text-white rounded-lg hover:bg-blue-<?= $default_blue_number; ?> hover:shadow-mg transition-all ease-in-out">Re-Sync
                         from Google
                         Sheet</button>
                 </form>
@@ -303,7 +304,16 @@ $monthsIndex = [
             class="year-group <?= $year !== array_key_first($data) ? 'hidden' : '' ?> text-gray-700">
 
             <!-- display year -->
-            <h2 class="text-[32px] font-bold mb-6 text-center text-blue-<?= $default_blue_number; ?>"><?= $year ?></h2>
+            <!-- <h2 class="text-lg font-bold text-center text-blue-<?= $default_blue_number; ?>">Year</h2> -->
+
+            <div class="grid grid-cols-[1fr_auto_1fr] place-items-center">
+                <hr class="w-full border-blue-<?= $default_blue_number; ?>">
+                <h2 class="text-[42px] px-4 font-bold mt-4 mb-6 text-center text-blue-<?= $default_blue_number; ?>">
+                    <?= $year ?>
+                </h2>
+                <hr class="w-full border-blue-<?= $default_blue_number; ?>">
+            </div>
+
             <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
                 <h3 class="text-xl font-semibold my-2">Legend</h3>
                 <hr>
@@ -344,7 +354,7 @@ $monthsIndex = [
                     </div>
 
                     <!-- 3-column grid -->
-                    <div class="grid grid-cols-[auto,3fr,auto] gap-4 mb-4">
+                    <div class="grid grid-cols-[auto,3fr,auto] gap-4 mb-4 hidden md:grid">
                         <!-- Teams per toggle -->
                         <div class="">
                             <div class="bg-white border rounded-xl p-2 px-4 text-center flex flex-col gap-4 overflow-x-auto">
@@ -390,9 +400,9 @@ $monthsIndex = [
                         <div class="text-white">
                             <div
                                 class="bg-blue-<?= $default_blue_number; ?> border rounded-xl p-2 px-4 text-center flex flex-col gap-4 overflow-x-auto">
-                                <div class="font-bold">Year Total</div>
+                                <div class="font-bold">Annual Total</div>
                                 <?php foreach ($team_s as $team => $count_s): ?>
-                                    <div class=""><?= array_sum($count_s) ?></div>
+                                    <div class="font-semibold"><?= array_sum($count_s) ?></div>
                                 <?php endforeach; ?>
                             </div>
 
@@ -409,14 +419,27 @@ $monthsIndex = [
 
             <?php foreach ($months as $month => $teams): ?>
                 <div class="month-section" data-month="<?= htmlspecialchars($month) ?>">
+
+                    <div class="grid grid-cols-[1fr_auto_1fr] place-items-center">
+                        <hr class="w-full border-blue-<?= $default_blue_number; ?>">
+                        <h2
+                            class="text-[24px] md:text-[32px] px-4 font-bold mt-4 mb-6 text-center text-blue-<?= $default_blue_number; ?>">
+                            <?= htmlspecialchars($month) ?>
+                        </h2>
+                        <hr class="w-full border-blue-<?= $default_blue_number; ?>">
+                    </div>
+
                     <?php foreach ($teams as $team => $quarters): ?>
                         <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
-
                             <!-- display team -->
-                            <h3 class="text-xl font-semibold my-2"><?= htmlspecialchars($team) ?> - <?= htmlspecialchars($month) ?>
+                            <h3
+                                class="text-xl md:text-2xl font-semibold my-2 flex justify-between items-center md:flex-row flex-col">
+                                <p class="text-blue-<?= $default_blue_number; ?> font-semibold"><?= htmlspecialchars($team) ?> </p>
+                                <p class="hidden md:block"><?= htmlspecialchars($month) ?></p>
                             </h3>
-                            <hr>
+                            <hr class="hidden md:block">
                             <div class="grid grid-cols-[80px_repeat(5,_1fr)] gap-4 py-4 hidden md:grid">
+
                                 <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
                                     <div class="font-bold">Marks</div>
                                     <div class="flex justify-center items-center gap-2">
