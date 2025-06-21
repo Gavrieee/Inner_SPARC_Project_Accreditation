@@ -38,11 +38,12 @@ function getToggleDataByTeamAndMonth(PDO $pdo)
     $query = "
         SELECT 
             team,
+            YEAR(datetime) AS year,
             MONTH(datetime) AS month,
             toggle,
             COUNT(*) AS count
         FROM manual_data
-        GROUP BY team, month, toggle
+        GROUP BY team, year, month, toggle
     ";
 
     $stmt = $pdo->prepare($query);
@@ -53,19 +54,21 @@ function getToggleDataByTeamAndMonth(PDO $pdo)
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $toggle = $row['toggle'];
         $team = $row['team'];
-        $month = (int) $row['month']; // 1 to 12
+        $year = (int) $row['year'];
+        $month = (int) $row['month'];
         $count = (int) $row['count'];
 
         // Initialize structure if not set
-        if (!isset($data[$toggle][$team])) {
-            $data[$toggle][$team] = array_fill(1, 12, 0);
+        if (!isset($data[$year][$toggle][$team])) {
+            $data[$year][$toggle][$team] = array_fill(1, 12, 0);
         }
 
-        $data[$toggle][$team][$month] = $count;
+        $data[$year][$toggle][$team][$month] = $count;
     }
 
     return $data;
 }
+
 
 function getToggleDataByTeamPerMonth(PDO $pdo): array
 {
@@ -73,11 +76,12 @@ function getToggleDataByTeamPerMonth(PDO $pdo): array
         SELECT 
             toggle,
             team,
+            YEAR(datetime) AS year,
             MONTH(datetime) AS month,
             COUNT(*) AS count
         FROM manual_data
-        GROUP BY toggle, team, MONTH(datetime)
-        ORDER BY toggle, team, MONTH(datetime)
+        GROUP BY toggle, team, year, month
+        ORDER BY year, toggle, team, month
     ");
 
     $data = [];
@@ -85,15 +89,15 @@ function getToggleDataByTeamPerMonth(PDO $pdo): array
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $toggle = $row['toggle'];
         $team = $row['team'];
+        $year = (int) $row['year'];
         $month = (int) $row['month'];
         $count = (int) $row['count'];
 
-        // Initialize team if not set
-        if (!isset($data[$toggle][$team])) {
-            $data[$toggle][$team] = array_fill(1, 12, 0);
+        if (!isset($data[$year][$toggle][$team])) {
+            $data[$year][$toggle][$team] = array_fill(1, 12, 0);
         }
 
-        $data[$toggle][$team][$month] = $count;
+        $data[$year][$toggle][$team][$month] = $count;
     }
 
     return $data;
