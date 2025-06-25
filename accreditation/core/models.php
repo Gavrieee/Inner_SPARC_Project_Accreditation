@@ -102,3 +102,96 @@ function getToggleDataByTeamPerMonth(PDO $pdo): array
 
     return $data;
 }
+
+function getTeamMonthlyData(PDO $pdo): array
+{
+    try {
+        $stmt = $pdo->query("
+            SELECT team, DATE_FORMAT(datetime, '%Y-%m') AS ym, COUNT(*) AS total
+            FROM manual_data
+            GROUP BY team, DATE_FORMAT(datetime, '%Y-%m')
+            ORDER BY ym, team
+        ");
+
+        $rawData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Structure: $monthlyData[month][team] = total
+        $monthlyData = [];
+
+        foreach ($rawData as $row) {
+            $month = $row['ym'];
+            $team = $row['team'];
+            $count = (int) $row['total'];
+
+            if (!isset($monthlyData[$month])) {
+                $monthlyData[$month] = [];
+            }
+
+            $monthlyData[$month][$team] = $count;
+        }
+
+        return $monthlyData;
+
+    } catch (PDOException $e) {
+        die("Query failed: " . $e->getMessage());
+    }
+}
+
+function getFilteredManualData(PDO $pdo, array $filters = []): array
+{
+    try {
+        // Get filter parameters with defaults
+        $name = $filters['name'] ?? '';
+        $team = $filters['team'] ?? '';
+        $toggle = $filters['toggle'] ?? '';
+        $month = $filters['month'] ?? '';
+
+        // Build the query with filters
+        $query = "SELECT * FROM manual_data WHERE 1=1";
+        $params = [];
+
+        if (!empty($name)) {
+            $query .= " AND name LIKE ?";
+            $params[] = "%$name%";
+        }
+
+        if (!empty($team)) {
+            $query .= " AND team = ?";
+            $params[] = $team;
+        }
+
+        if ($toggle !== '') {
+            if ($toggle === 'null') {
+                $query .= " AND (toggle IS NULL OR toggle = '')";
+            } else {
+                $query .= " AND toggle = ?";
+                $params[] = $toggle;
+            }
+        }
+
+        if (!empty($month)) {
+            $query .= " AND MONTH(datetime) = ?";
+            $params[] = ltrim($month, '0'); // Remove leading zero for MySQL MONTH()
+        }
+
+        $query .= " ORDER BY datetime DESC";
+
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    } catch (PDOException $e) {
+        throw new Exception("Database query failed: " . $e->getMessage());
+    }
+}
+
+function getAllTeams(PDO $pdo): array
+{
+    try {
+        $stmt = $pdo->query("SELECT DISTINCT team FROM manual_data ORDER BY team ASC");
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (PDOException $e) {
+        throw new Exception("Failed to get teams: " . $e->getMessage());
+    }
+}

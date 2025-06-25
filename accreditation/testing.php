@@ -13,6 +13,8 @@ $url = "https://docs.google.com/spreadsheets/d/$sheetId/gviz/tq?tqx=out:csv&gid=
 $stmt = $pdo->query("SELECT * FROM manual_data ORDER BY datetime ASC");
 $dbResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+$monthlyData = getTeamMonthlyData($pdo);
+
 // Process data for grouped view by year and month
 $data = [];
 
@@ -31,6 +33,8 @@ foreach ($dbResults as $row) {
     $year = $date->format('Y');
     $month = $date->format('F');
     $day = (int) $date->format('j');
+
+    // EDIT THIS FOR WEEK 5!
 
     $quarter = match (true) {
         $day <= 7 => 'Week 1',
@@ -118,6 +122,23 @@ $monthsIndex = [
     12 => "December"
 ];
 
+$teamColors = [
+    'Blazing SPARCS' => 'rgba(54, 162, 235, 0.6)',
+    'Feisty Heroine' => 'rgba(75, 192, 192, 0.6)',
+    'Fiery Achievers' => 'rgba(255, 99, 132, 0.6)',
+    'Flameborn Champions' => 'rgba(255, 206, 86, 0.6)',
+    'Shining Phoenix' => 'rgba(255, 206, 86, 0.6)',
+    'default' => 'rgba(201, 203, 207, 0.6)'
+];
+
+try {
+    $pdo = getPDO();
+    $rows = getFilteredManualData($pdo); // Get all data initially
+    $teamOptions = getAllTeams($pdo);
+} catch (Exception $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -128,16 +149,80 @@ $monthsIndex = [
     <title>Agent Accreditation</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <script src="js/chart.js"></script> -->
     <script>
+        // Output all chart data and team colors as JS objects
+        const chartData = <?= json_encode($monthlyData) ?>;
+        const teamColors = <?= json_encode($teamColors) ?>;
+        const initializedCharts = {};
+
+        function initChart(monthKey) {
+            const chartId = 'chart_' + monthKey.replace(/-/g, '_');
+            if (initializedCharts[chartId]) return; // Already initialized
+
+            const ctx = document.getElementById(chartId);
+            if (!ctx) return;
+
+            const teams = chartData[monthKey];
+            if (!teams) return;
+
+            const labels = Object.keys(teams);
+            const data = Object.values(teams);
+
+            // Prepare colors per team
+            const backgroundColors = [];
+            const borderColors = [];
+            labels.forEach(teamName => {
+                const bg = teamColors[teamName] || teamColors['default'];
+                const bd = bg.replace('0.6', '1');
+                backgroundColors.push(bg);
+                borderColors.push(bd);
+            });
+
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: monthKey,
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+
+            initializedCharts[chartId] = true;
+        }
+
         function filterByYear(year) {
             document.querySelectorAll('.year-group').forEach(el => {
                 el.classList.add('hidden');
             });
-            document.getElementById(`year-${year}`).classList.remove('hidden');
+            const yearGroup = document.getElementById(`year-${year}`);
+            yearGroup.classList.remove('hidden');
 
             // Reset month filter when year changes
             document.getElementById('month-filter').value = 'all';
             showAllMonths();
+
+            // Initialize charts for all visible month sections in this year
+            yearGroup.querySelectorAll('.month-section').forEach(section => {
+                const monthKey = section.getAttribute('data-monthkey');
+                if (monthKey) initChart(monthKey);
+            });
         }
 
         function filterByMonth(month) {
@@ -147,6 +232,9 @@ $monthsIndex = [
                 monthSections.forEach(section => {
                     if (month === 'all' || section.dataset.month === month) {
                         section.classList.remove('hidden');
+                        // Initialize chart for this month section
+                        const monthKey = section.getAttribute('data-monthkey');
+                        if (monthKey) initChart(monthKey);
                     } else {
                         section.classList.add('hidden');
                     }
@@ -160,9 +248,20 @@ $monthsIndex = [
                 const monthSections = yearGroup.querySelectorAll('.month-section');
                 monthSections.forEach(section => {
                     section.classList.remove('hidden');
+                    // Initialize chart for this month section
+                    const monthKey = section.getAttribute('data-monthkey');
+                    if (monthKey) initChart(monthKey);
                 });
             });
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize charts for all visible month sections on page load
+            document.querySelectorAll('.year-group:not(.hidden) .month-section').forEach(section => {
+                const monthKey = section.getAttribute('data-monthkey');
+                if (monthKey) initChart(monthKey);
+            });
+        });
     </script>
 </head>
 
@@ -177,7 +276,8 @@ $monthsIndex = [
 
                     <!-- FIRST DIV -->
                     <div class="text-center">
-                        <h1 class="font-bold text-2xl text-blue-<?= $default_blue_number; ?>">Agent Accreditation</h1>
+                        <h1 class="font-bold text-2xl text-blue-<?= $default_blue_number; ?>">Agent
+                            Accreditation</h1>
                     </div>
 
                     <!-- LINE -->
@@ -193,7 +293,14 @@ $monthsIndex = [
                         <select name="team"
                             class="w-full p-[4px] rounded-md pl-2 border border-1 border-blue-<?= $default_blue_number; ?> focus:outline-none1 focus:outline- focus:border-blue-<?= $default_blue_number; ?> bg-transparent focus-within:outline-2 focus-within:outline-blue-<?= $default_blue_number; ?>"
                             required>
+                            <option value="Blazing SPARCS">Blazing SPARCS</option>
+                            <option value="Feisty Heroine">Feisty Heroine</option>
+                            <option value="Fiery Achievers">Fiery Achievers</option>
+                            <option value="Flameborn Champions">Flameborn Champions</option>
+                            <option value="Shining Phoenix">Shining Phoenix</option>
+
                             <?php
+                            /*
                             $printedTeams = [];
                             foreach ($data as $year => $months):
                                 foreach ($months as $month => $teams):
@@ -201,16 +308,17 @@ $monthsIndex = [
                                         if (in_array($team, $printedTeams))
                                             continue;
                                         $printedTeams[] = $team;
-                                        ?>
-                                        <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
-                                        <?php
+                            ?>
+                            <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
+                            <?php
                                     endforeach;
                                 endforeach;
                             endforeach;
+                            */
                             ?>
                         </select>
 
-                        <!-- THIRD DIV -->
+                        <!-- THIRD D IV -->
                         <label for="datetime" class="block">
                             <input type="datetime-local" name="datetime"
                                 class="w-full p-[4px] rounded-md pl-2 border border-1 border-blue-<?= $default_blue_number; ?> focus:outline-none1 focus:outline- focus:border-blue-<?= $default_blue_number; ?> bg-transparent focus-within:outline-2 focus-within:outline-blue-<?= $default_blue_number; ?> appearance-none">
@@ -218,9 +326,9 @@ $monthsIndex = [
 
                         <select name="toggle"
                             class="w-full p-[4px] rounded-md pl-2 border border-1 border-blue-<?= $default_blue_number; ?> focus:outline-none1 focus:outline- focus:border-blue-<?= $default_blue_number; ?> bg-transparent focus-within:outline-2 focus-within:outline-blue-<?= $default_blue_number; ?>">
-                            <option value="1">✅ Finished</option>
-                            <option value="0">❌ Cancelled</option>
-                            <option value="">⬜ No Response</option>
+                            <option value="1">Finished</option>
+                            <option value="0">Cancelled / No Response</option>
+                            <option value="">Left</option>
                         </select>
                     </div>
 
@@ -255,6 +363,123 @@ $monthsIndex = [
         ?>
     </div>
 
+
+
+    <div class="bg-white rounded-2xl shadow pt-2 py-6 px-4 mb-6">
+
+        <h3 class="text-xl font-semibold my-2">Users</h3>
+        <hr>
+
+        <div class="filters bg-blue-1001 flex flex-wrap gap-2 py-4">
+            <input type="text" id="search-name" placeholder="Search by name"
+                class="bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800" />
+
+            <select id="filter-team"
+                class="bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                <option value="">All Teams</option>
+                <?php foreach ($teamOptions as $team): ?>
+                    <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
+                <?php endforeach; ?>
+            </select>
+
+            <select id="filter-toggle"
+                class="bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                <option value="">All Status</option>
+                <option value="1">Finished</option>
+                <option value="0">Cancelled / No Response</option>
+                <option value="null">Left</option>
+            </select>
+
+            <select id="filter-month"
+                class="bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                <option value="">All Months</option>
+                <?php foreach ($monthsIndex as $num => $name): ?>
+                    <option value="<?= str_pad($num, 2, '0', STR_PAD_LEFT) ?>"><?= $name ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <!-- Scrollable area with fixed height -->
+        <div class="overflow-y-auto overflow-x-auto" style="max-height: 300px;">
+            <table class="w-full text-left border-separate border-spacing-2">
+                <thead class="sticky top-0 bg-white text-center mx-2">
+                    <tr class="bg-white">
+                        <th class="rounded-lg p-2 m-2 bg-blue-<?= $default_blue_number; ?> text-white">
+                            Entry DateTime
+                        </th>
+                        <th class="rounded-lg p-2 m-2 bg-blue-<?= $default_blue_number; ?> text-white">
+                            Name
+                        </th>
+                        <th class="rounded-lg p-2 m-2 bg-blue-<?= $default_blue_number; ?> text-white">
+                            Team
+                        </th>
+                        <th class="rounded-lg p-2 m-2 bg-blue-<?= $default_blue_number; ?> text-white">
+                            Status
+                        </th>
+                        <th class="rounded-lg p-2 m-2 bg-red-600 text-white">
+                            Action
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="user-table-body" class="rounded-lg">
+                    <?php foreach ($rows as $row): ?>
+                        <tr data-id="<?= $row['id'] ?>">
+                            <!-- Static Date -->
+                            <td class="p-0 max-w-[160px]">
+                                <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
+                                    <?= date('Y-m-d H:i', strtotime($row['datetime'])) ?>
+                                </div>
+                            </td>
+
+                            <!-- Static Name -->
+                            <td class="p-0 max-w-[160px]">
+                                <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
+                                    <?= htmlspecialchars($row['name']) ?>
+                                </div>
+                            </td>
+
+                            <!-- Team Select -->
+                            <td class="p-0">
+                                <select
+                                    class="team-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
+                                    <?php foreach ($teamOptions as $teamOption): ?>
+                                        <option value="<?= $teamOption ?>" <?= $row['team'] === $teamOption ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($teamOption) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+
+
+                            <!-- Toggle Select -->
+                            <td class="p-0">
+                                <select
+                                    class="toggle-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
+                                    <option value="1" <?= $row['toggle'] === '1' ? 'selected' : '' ?>>Finished</option>
+                                    <option value="0" <?= $row['toggle'] === '0' ? 'selected' : '' ?>>Cancelled</option>
+                                    <option value="" <?= $row['toggle'] === '' ? 'selected' : '' ?>>No Response</option>
+                                </select>
+                            </td>
+
+                            <!-- Delete Button -->
+                            <td class="p-0">
+                                <button
+                                    class="delete-btn w-full block bg-red-500 text-white rounded-lg px-3 py-2 hover:bg-red-600 transition">
+                                    Delete
+                                </button>
+                            </td>
+
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+
+
     <label class="block mb-4">
         <div class="flex flex-col md:flex-row justify-between items-center gap-1 mb-2 text-md">
             <div class="flex gap-1 items-center">
@@ -269,17 +494,8 @@ $monthsIndex = [
                     <select id="month-filter" onchange="filterByMonth(this.value)"
                         class="font-bold mb-4 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
                         <option value="all">All Months</option>
-                        <?php
-                        $availableMonths = [];
-                        foreach ($data as $year => $months):
-                            foreach (array_keys($months) as $month):
-                                if (!in_array($month, $availableMonths)):
-                                    $availableMonths[] = $month;
-                                endif;
-                            endforeach;
-                        endforeach;
-                        foreach ($availableMonths as $month): ?>
-                            <option value="<?= $month ?>"><?= $month ?></option>
+                        <?php foreach ($monthsIndex as $num => $name): ?>
+                            <option value="<?= $name ?>"><?= $name ?></option>
                         <?php endforeach; ?>
                     </select>
                 </span>
@@ -418,7 +634,11 @@ $monthsIndex = [
             </div>
 
             <?php foreach ($months as $month => $teams): ?>
-                <div class="month-section" data-month="<?= htmlspecialchars($month) ?>">
+                <?php
+                $monthNumber = array_search($month, $monthsIndex);
+                $currentMonthKey = sprintf('%04d-%02d', $year, $monthNumber);
+                ?>
+                <div class="month-section" data-month="<?= htmlspecialchars($month) ?>" data-monthkey="<?= $currentMonthKey ?>">
 
                     <div class="grid grid-cols-[1fr_auto_1fr] place-items-center">
                         <hr class="w-full border-blue-<?= $default_blue_number; ?>">
@@ -459,6 +679,7 @@ $monthsIndex = [
                                     </div>
                                 </div>
 
+
                                 <?php foreach (['Week 1', 'Week 2', 'Week 3', 'Week 4'] as $q): ?>
                                     <div class="border rounded-xl p-2 text-center bg-gray-50 flex flex-col gap-4 ">
                                         <div class="font-bold"><?= $q ?></div>
@@ -468,7 +689,6 @@ $monthsIndex = [
                                         <div class=""><?= $quarters[$q]['blank'] ?? 0 ?></div>
                                     </div>
                                 <?php endforeach; ?>
-
                                 <!-- this will show TOTAL per marks -->
                                 <div
                                     class="rounded-xl py-2 text-center flex w-full h-full flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white">
@@ -541,11 +761,138 @@ $monthsIndex = [
                                 </div>
                             </div>
                         </div>
+
                     <?php endforeach; ?>
+
+                    <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6">
+
+                        <?php
+                        // Always render the chart canvas for every month-section
+                        if (isset($monthlyData[$currentMonthKey])):
+                            ?>
+                            <h3
+                                class="text-xl md:text-2xl font-semibold my-2 flex justify-between items-center md:flex-row flex-col">
+                                <p class="text-blue-<?= $default_blue_number; ?> font-semibold">
+                                    <?= date('F', strtotime($currentMonthKey . '-01')) // Month only ?>
+                                </p>
+
+                                <p class="hidden md:block">
+                                    <?= date('Y', strtotime($currentMonthKey . '-01')) // Year only ?>
+                                </p>
+                            </h3>
+
+                            <div class="mb-10 hidden1 lg:block1">
+                                <hr>
+                                <canvas id="chart_<?= str_replace('-', '_', $currentMonthKey) ?>"
+                                    class="w-full max-w-3xl mx-auto"></canvas>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             <?php endforeach; ?>
         </div>
     <?php endforeach; ?>
+
+    <!-- Manual Data Table JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const nameInput = document.getElementById("search-name");
+            const teamFilter = document.getElementById("filter-team");
+            const toggleFilter = document.getElementById("filter-toggle");
+            const monthFilter = document.getElementById("filter-month");
+
+            let searchTimeout; // For debouncing the search
+
+            function fetchFilteredData() {
+                const name = nameInput.value;
+                const team = teamFilter.value;
+                const toggle = toggleFilter.value;
+                const month = monthFilter.value;
+
+                // Show loading indicator
+                const tableBody = document.getElementById("user-table-body");
+                tableBody.innerHTML =
+                    '<tr><td colspan="5" class="text-center py-4 text-gray-500">Loading...</td></tr>';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "ajax/fetch_filtered_data.php", true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        document.getElementById("user-table-body").innerHTML = xhr.responseText;
+                        // Reattach jQuery event handlers after content update
+                        attachEventHandlers();
+                    } else {
+                        tableBody.innerHTML =
+                            '<tr><td colspan="5" class="text-center py-4 text-red-500">Error loading data</td></tr>';
+                    }
+                };
+                xhr.onerror = function () {
+                    tableBody.innerHTML =
+                        '<tr><td colspan="5" class="text-center py-4 text-red-500">Error loading data</td></tr>';
+                };
+                xhr.send(
+                    `name=${encodeURIComponent(name)}&team=${encodeURIComponent(team)}&toggle=${encodeURIComponent(toggle)}&month=${encodeURIComponent(month)}`
+                );
+            }
+
+            // Debounced search function
+            function debouncedSearch() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(fetchFilteredData, 500); // 500ms delay
+            }
+
+            // Add event listeners with different behaviors
+            nameInput.addEventListener("input", debouncedSearch); // Debounced for typing
+            teamFilter.addEventListener("change", fetchFilteredData); // Immediate for dropdowns
+            toggleFilter.addEventListener("change", fetchFilteredData); // Immediate for dropdowns
+            monthFilter.addEventListener("change", fetchFilteredData); // Immediate for month
+        });
+
+        function attachEventHandlers() {
+            // Automatically update on change of team or toggle
+            $('select.team-select, select.toggle-select').off('change').on('change', function () {
+                const row = $(this).closest('tr');
+                const id = row.data('id');
+                const team = row.find('.team-select').val();
+                const toggle = row.find('.toggle-select').val();
+
+                $.post('ajax/update_data.php', {
+                    id,
+                    team,
+                    toggle
+                }, function (response) {
+                    console.log("✅ " + response);
+                }).fail(function () {
+                    alert("❌ Failed to update.");
+                });
+            });
+
+            // Delete button event handler
+            $('.delete-btn').off('click').on('click', function () {
+                if (!confirm("Are you sure you want to delete this entry?")) return;
+
+                const row = $(this).closest('tr');
+                const id = row.data('id');
+
+                $.post('ajax/delete_data.php', {
+                    id
+                }, function (response) {
+                    alert(response);
+                    row.remove();
+                }).fail(function () {
+                    alert("❌ Failed to delete.");
+                });
+            });
+        }
+
+        $(document).ready(function () {
+            // Initial attachment of event handlers
+            attachEventHandlers();
+        });
+    </script>
+
 </body>
 
 </html>

@@ -21,4 +21,10 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
+function getPDO(): PDO
+{
+    global $pdo;
+    return $pdo;
+}
+
 ?>
