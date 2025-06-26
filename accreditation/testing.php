@@ -40,8 +40,10 @@ foreach ($dbResults as $row) {
         $day <= 7 => 'Week 1',
         $day <= 14 => 'Week 2',
         $day <= 21 => 'Week 3',
-        default => 'Week 4',
+        $day <= 28 => 'Week 4',
+        default => 'Week 5', // For days 29–31
     };
+
 
     if (!isset($data[$year][$month][$team])) {
         $data[$year][$month][$team] = [
@@ -49,6 +51,7 @@ foreach ($dbResults as $row) {
             'Week 2' => ['1' => 0, '0' => 0, 'blank' => 0],
             'Week 3' => ['1' => 0, '0' => 0, 'blank' => 0],
             'Week 4' => ['1' => 0, '0' => 0, 'blank' => 0],
+            'Week 5' => ['1' => 0, '0' => 0, 'blank' => 0],
         ];
     }
 
@@ -298,24 +301,6 @@ try {
                             <option value="Fiery Achievers">Fiery Achievers</option>
                             <option value="Flameborn Champions">Flameborn Champions</option>
                             <option value="Shining Phoenix">Shining Phoenix</option>
-
-                            <?php
-                            /*
-                            $printedTeams = [];
-                            foreach ($data as $year => $months):
-                                foreach ($months as $month => $teams):
-                                    foreach ($teams as $team => $quarters):
-                                        if (in_array($team, $printedTeams))
-                                            continue;
-                                        $printedTeams[] = $team;
-                            ?>
-                            <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
-                            <?php
-                                    endforeach;
-                                endforeach;
-                            endforeach;
-                            */
-                            ?>
                         </select>
 
                         <!-- THIRD D IV -->
@@ -658,7 +643,16 @@ try {
                                 <p class="hidden md:block"><?= htmlspecialchars($month) ?></p>
                             </h3>
                             <hr class="hidden md:block">
-                            <div class="grid grid-cols-[80px_repeat(5,_1fr)] gap-4 py-4 hidden md:grid">
+                            <?php
+                            $hasWeek5 = isset($quarters['Week 5']) && (
+                                ($quarters['Week 5']['1'] ?? 0) > 0 ||
+                                ($quarters['Week 5']['0'] ?? 0) > 0 ||
+                                ($quarters['Week 5']['blank'] ?? 0) > 0
+                            );
+                            ?>
+
+                            <div
+                                class="grid <?= $hasWeek5 ? 'grid-cols-[80px_repeat(6,_1fr)]' : 'grid-cols-[80px_repeat(5,_1fr)]' ?> gap-4 py-4 hidden md:grid">
 
                                 <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
                                     <div class="font-bold">Marks</div>
@@ -680,7 +674,14 @@ try {
                                 </div>
 
 
-                                <?php foreach (['Week 1', 'Week 2', 'Week 3', 'Week 4'] as $q): ?>
+                                <?php
+                                $weekLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                                if ($hasWeek5) {
+                                    $weekLabels[] = 'Week 5';
+                                }
+                                foreach ($weekLabels as $q):
+                                    ?>
+
                                     <div class="border rounded-xl p-2 text-center bg-gray-50 flex flex-col gap-4 ">
                                         <div class="font-bold"><?= $q ?></div>
 
@@ -700,6 +701,7 @@ try {
                                         'Week 2' => 0,
                                         'Week 3' => 0,
                                         'Week 4' => 0,
+                                        'Week 5' => 0,
                                     ];
 
                                     $total_check = 0;
@@ -742,18 +744,12 @@ try {
                                 <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
                                     <div class="font-bold">Total</div>
                                 </div>
-                                <div class="border font-semibold rounded-xl p-2 text-center">
-                                    <?= $totals_by_quarter['Week 1'] ?>
-                                </div>
-                                <div class="border font-semibold rounded-xl p-2 text-center">
-                                    <?= $totals_by_quarter['Week 2'] ?>
-                                </div>
-                                <div class="border font-semibold rounded-xl p-2 text-center">
-                                    <?= $totals_by_quarter['Week 3'] ?>
-                                </div>
-                                <div class="border font-semibold rounded-xl p-2 text-center">
-                                    <?= $totals_by_quarter['Week 4'] ?>
-                                </div>
+
+                                <?php foreach ($weekLabels as $q): ?>
+                                    <div class="border font-semibold rounded-xl p-2 text-center">
+                                        <?= $totals_by_quarter[$q] ?>
+                                    </div>
+                                <?php endforeach; ?>
 
                                 <div
                                     class="border rounded-xl p-2 text-center flex flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white font-semibold">
@@ -764,8 +760,8 @@ try {
 
                     <?php endforeach; ?>
 
+                    <!-- DISPLAY CHARTS FOR EACH MONTH -->
                     <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6">
-
                         <?php
                         // Always render the chart canvas for every month-section
                         if (isset($monthlyData[$currentMonthKey])):
