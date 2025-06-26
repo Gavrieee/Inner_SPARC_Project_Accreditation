@@ -101,13 +101,16 @@ $months = [
 // Optional: labels for toggles
 $toggleLabels = [
     '1' => '<div class="flex pt-2 items-center gap-2 md:gap-1 text-green-600 font-semibold md:text-lg text-[14px]">'
-        . $svg['check'] . '<span>Finished Accreditation</span></div>',
+        . $svg['check'] . '<span>Accredited Agents <span class="text-sm opacity-50 text-gray-700">(Active
+                                agents)</span></span></div>',
 
     '0' => '<div class="flex pt-2 items-center gap-2 md:gap-1 text-red-600 font-semibold md:text-lg text-[14px]">'
-        . $svg['x_mark'] . '<span>Cancelled Accreditation</span></div>',
+        . $svg['x_mark'] . '<span>Cancelled / Unresponsive <span class="text-sm opacity-50 text-gray-700">(No response or
+                                cancelled applications)</span></div>',
 
     '' => '<div class="flex pt-2 items-center gap-2 md:gap-1 text-yellow-600 font-semibold md:text-lg text-[14px]">'
-        . $svg['signal_lost'] . '<span>No Response from Agent</span></div>',
+        . $svg['signal_lost'] . '<span>Former Agents <span class="text-sm opacity-50 text-gray-700">(Resigned or
+                                withdrawn)</span></span></div>',
 ];
 
 $monthsIndex = [
@@ -311,7 +314,7 @@ try {
 
                         <select name="toggle"
                             class="w-full p-[4px] rounded-md pl-2 border border-1 border-blue-<?= $default_blue_number; ?> focus:outline-none1 focus:outline- focus:border-blue-<?= $default_blue_number; ?> bg-transparent focus-within:outline-2 focus-within:outline-blue-<?= $default_blue_number; ?>">
-                            <option value="1">Finished</option>
+                            <option value="1">Accredited</option>
                             <option value="0">Cancelled / No Response</option>
                             <option value="">Left</option>
                         </select>
@@ -440,9 +443,10 @@ try {
                             <td class="p-0">
                                 <select
                                     class="toggle-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
-                                    <option value="1" <?= $row['toggle'] === '1' ? 'selected' : '' ?>>Finished</option>
-                                    <option value="0" <?= $row['toggle'] === '0' ? 'selected' : '' ?>>Cancelled</option>
-                                    <option value="" <?= $row['toggle'] === '' ? 'selected' : '' ?>>No Response</option>
+                                    <option value="1" <?= $row['toggle'] === '1' ? 'selected' : '' ?>>Accredited</option>
+                                    <option value="0" <?= $row['toggle'] === '0' ? 'selected' : '' ?>>Cancelled / No
+                                        Response</option>
+                                    <option value="" <?= $row['toggle'] === '' ? 'selected' : '' ?>>Left</option>
                                 </select>
                             </td>
 
@@ -507,6 +511,7 @@ try {
             <!-- display year -->
             <!-- <h2 class="text-lg font-bold text-center text-blue-<?= $default_blue_number; ?>">Year</h2> -->
 
+            <!-- DISPLAY THE YEAR -->
             <div class="grid grid-cols-[1fr_auto_1fr] place-items-center">
                 <hr class="w-full border-blue-<?= $default_blue_number; ?>">
                 <h2 class="text-[42px] px-4 font-bold mt-4 mb-6 text-center text-blue-<?= $default_blue_number; ?>">
@@ -522,18 +527,21 @@ try {
                     <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
                         title="Finished Accreditation">
                         <?= $svg['check'] ?>
-                        <span class="ml-2">Finished Accreditation</span>
+                        <span class="ml-2">Accredited Agents<br><span class="text-sm opacity-50">(Active
+                                agents)</span></span>
                     </div>
                     <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
                         title="Cancelled Accreditation">
                         <?= $svg['x_mark'] ?>
-                        <span class="ml-2">Cancelled Accreditation</span>
+                        <span class="ml-2">Cancelled / Unresponsive<br><span class="text-sm opacity-50">(No response or
+                                cancelled applications)</span></span>
                     </div>
                     <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
                         title="No response from Agent">
                         <?php echo str_replace('bg-red-500', 'text-gray-500', $svg['signal_lost']);
                         ?>
-                        <span class="ml-2">No response from Agent</span>
+                        <span class="ml-2">Former Agents <br><span class="text-sm opacity-50">(Resigned or
+                                withdrawn)</span></span>
                     </div>
                 </div>
             </div>
@@ -546,11 +554,18 @@ try {
                 foreach ($yearData as $toggle => $team_s):
                     ?>
 
-                    <!-- Full-width Toggle label -->
+                    <!-- DISPLAY THE MARK LABELS (FROM LEGEND) -->
                     <div class="mb-2">
-                        <h2 class="text-xl font-bold">
-                            <?= $toggleLabels[$toggle] ?? 'Unknown' ?>
-                        </h2>
+                        <div class="flex flex-row justify-between items-end">
+
+                            <h2 class="text-xl font-bold">
+                                <?= $toggleLabels[$toggle] ?? 'Unknown' ?>
+                            </h2>
+                            <h2 class="text-2xl font-semibold text-gray-700">
+                                <?= $year ?>
+                            </h2>
+                        </div>
+
                         <hr class="h-px my-4 mt-2">
                     </div>
 
