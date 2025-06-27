@@ -273,10 +273,10 @@ try {
     </script>
 </head>
 
-<body class="bg-gray-100 text-gray-800 py-6 sm:px-[20%] md:px-[15%] px-[10%]">
+<body class="bg-gray-100 text-gray-800 py-6 sm:px-[15%] md:px-[10%] px-[5%]">
 
     <!-- ENCODING form -->
-    <section class="bg-white rounded-2xl shadow p-6 mb-6 mx-[20%] min-w-[30%]">
+    <section class="bg-white rounded-2xl shadow p-6 mb-6 mx-[15%] min-w-[25%]">
         <div class="flex justify-center items-center bg-blue-1001 pt-4">
 
             <div class="bg-red-3001 w-full px-10 h-fit flex justify-center items-center">
@@ -291,35 +291,50 @@ try {
                     <!-- LINE -->
                     <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-blue-<?= $default_blue_number; ?>">
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                         <!-- SECOND DIV -->
-                        <input type="text" name="name" placeholder="Full Name"
-                            class="pl-2 w-full border-b border-1.5 p-[4px] border-blue-<?= $default_blue_number; ?> focus:outline-none focus:border-blue-<?= $default_blue_number; ?> bg-transparent"
-                            required>
 
-                        <select name="team"
-                            class="w-full p-[4px] rounded-md pl-2 border border-1 border-blue-<?= $default_blue_number; ?> focus:outline-none1 focus:outline- focus:border-blue-<?= $default_blue_number; ?> bg-transparent focus-within:outline-2 focus-within:outline-blue-<?= $default_blue_number; ?>"
-                            required>
-                            <option value="Blazing SPARCS">Blazing SPARCS</option>
-                            <option value="Feisty Heroine">Feisty Heroine</option>
-                            <option value="Fiery Achievers">Fiery Achievers</option>
-                            <option value="Flameborn Champions">Flameborn Champions</option>
-                            <option value="Shining Phoenix">Shining Phoenix</option>
-                        </select>
+                        <?php
+                        $labelDesign = "text-blue-" . $default_blue_number . " font-semibold";
+                        $sharedInputStyles = "mt-1 w-full px-3 py-2 rounded-md border border-blue-$default_blue_number focus:outline-none focus:border-blue-$default_blue_number bg-transparent appearance-none cursor-pointer";
+                        $importantIcon = "text-red-500";
+                        ?>
 
-                        <!-- THIRD D IV -->
-                        <label for="datetime" class="block">
-                            <input type="datetime-local" name="datetime"
-                                class="w-full p-[4px] rounded-md pl-2 border border-1 border-blue-<?= $default_blue_number; ?> focus:outline-none1 focus:outline- focus:border-blue-<?= $default_blue_number; ?> bg-transparent focus-within:outline-2 focus-within:outline-blue-<?= $default_blue_number; ?> appearance-none">
+                        <label for="name">
+                            <span class="<?= $labelDesign ?>">Agent Name <span
+                                    class="<?= $importantIcon; ?>">*</span></span>
+                            <input type="text" name="name" placeholder="Enter agent's full name"
+                                class="<?= $sharedInputStyles ?> cursor-text" required>
                         </label>
 
-                        <select name="toggle"
-                            class="w-full p-[4px] rounded-md pl-2 border border-1 border-blue-<?= $default_blue_number; ?> focus:outline-none1 focus:outline- focus:border-blue-<?= $default_blue_number; ?> bg-transparent focus-within:outline-2 focus-within:outline-blue-<?= $default_blue_number; ?>">
-                            <option value="1">Accredited</option>
-                            <option value="0">Cancelled / No Response</option>
-                            <!-- <option value="">Left</option> -->
-                        </select>
+                        <label for="team">
+                            <span class="<?= $labelDesign ?>">Team <span class="<?= $importantIcon; ?>">*</span></span>
+                            <select name="team" class="<?= $sharedInputStyles ?>" required>
+                                <option value="Blazing SPARCS">Blazing SPARCS</option>
+                                <option value="Feisty Heroine">Feisty Heroine</option>
+                                <option value="Fiery Achievers">Fiery Achievers</option>
+                                <option value="Flameborn Champions">Flameborn Champions</option>
+                                <option value="Shining Phoenix">Shining Phoenix</option>
+                            </select>
+                        </label>
+
+                        <label for="datetime">
+                            <span class="<?= $labelDesign ?>">Date of Entry</span>
+                            <input type="datetime-local" name="datetime" class="<?= $sharedInputStyles ?>" required>
+                        </label>
+
+                        <label for="toggle">
+                            <span class="<?= $labelDesign ?>">Status <span
+                                    class="<?= $importantIcon; ?>">*</span></span>
+                            <select name="toggle" class="<?= $sharedInputStyles ?>" required>
+                                <option value="1">Accredited</option>
+                                <option value="0">Cancelled / No Response</option>
+                            </select>
+                        </label>
+
+
+
                     </div>
 
                     <!-- FOURTH DIV -->
@@ -361,33 +376,37 @@ try {
         <hr>
 
         <div class="filters bg-blue-1001 flex flex-wrap gap-2 py-4">
-            <input type="text" id="search-name" placeholder="Search by name"
-                class="bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800" />
 
-            <select id="filter-team"
-                class="bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800">
+            <!-- tailwind css for filters -->
+            <?php
+            $filterClass = "bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800 w-full sm:w-auto flex-1 min-w-[150px]";
+            ?>
+
+            <input type="text" id="search-name" placeholder="Search by name" class="<?= $filterClass ?>" />
+
+            <select id="filter-team" class="<?= $filterClass ?>">
                 <option value="">All Teams</option>
                 <?php foreach ($teamOptions as $team): ?>
                 <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
                 <?php endforeach; ?>
             </select>
 
-            <select id="filter-toggle"
-                class="bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800">
+            <select id="filter-toggle" class="<?= $filterClass ?>">
                 <option value="">All Status</option>
                 <option value="1">Finished</option>
                 <option value="0">Cancelled / No Response</option>
                 <option value="null">Left</option>
             </select>
 
-            <select id="filter-month"
-                class="bg-gray-100 rounded-xl pl-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-800">
+            <select id="filter-month" class="<?= $filterClass ?>">
                 <option value="">All Months</option>
                 <?php foreach ($monthsIndex as $num => $name): ?>
                 <option value="<?= str_pad($num, 2, '0', STR_PAD_LEFT) ?>"><?= $name ?></option>
                 <?php endforeach; ?>
             </select>
+
         </div>
+
 
         <!-- Scrollable area with fixed height -->
         <div class="overflow-y-auto overflow-x-auto" style="max-height: 300px;">
@@ -415,11 +434,14 @@ try {
                     <?php foreach ($rows as $row): ?>
                     <tr data-id="<?= $row['id'] ?>">
                         <!-- Static Date -->
+
                         <td class="p-0 max-w-[160px]">
                             <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
-                                <?= date('Y-m-d H:i', strtotime($row['datetime'])) ?>
+                                <!-- Changes datetime format to readable view -->
+                                <?= date('F j, Y \a\t g:i A', strtotime($row['datetime'])) ?>
                             </div>
                         </td>
+
 
                         <!-- Static Name -->
                         <td class="p-0 max-w-[160px]">
@@ -700,8 +722,13 @@ try {
                                 foreach ($weekLabels as $q):
                                     ?>
 
+                    <!-- PRINTS THE WEEKS -->
                     <div class="border rounded-xl p-2 text-center bg-gray-50 flex flex-col gap-4 ">
-                        <div class="font-bold"><?= $q ?></div>
+                        <div class="font-bold">
+                            <span class="hidden xl:inline"><?= $q ?></span>
+                            <span class="inline xl:hidden"><?= 'W' . substr($q, -1) ?></span>
+                        </div>
+
 
                         <div class=""><?= $quarters[$q]['1'] ?? 0 ?></div>
                         <div class=""><?= $quarters[$q]['0'] ?? 0 ?></div>
@@ -711,7 +738,11 @@ try {
                     <!-- this will show TOTAL per marks -->
                     <div
                         class="rounded-xl py-2 text-center flex w-full h-full flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white">
-                        <div class="font-bold">Month Total</div>
+                        <div class="font-bold">
+                            <span class="hidden xl:inline">Month Total</span>
+                            <span class="inline xl:hidden">MT</span>
+                        </div>
+
 
                         <?php
                                     $totals_by_quarter = [

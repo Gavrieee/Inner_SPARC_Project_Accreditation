@@ -25,7 +25,7 @@ try {
 
             <td class="p-0 max-w-[160px]">
                 <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
-                    <?= htmlspecialchars($row['datetime']) ?>
+                    <?= date('F j, Y \a\t g:i A', strtotime($row['datetime'])) ?>
 
                 </div>
             </td>
@@ -49,14 +49,14 @@ try {
             </td>
             <td class="p-0">
                 <select class="toggle-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
-                    <option value="1" <?= $row['toggle'] === '1' ? 'selected' : '' ?>>Finished</option>
-                    <option value="0" <?= $row['toggle'] === '0' ? 'selected' : '' ?>>Cancelled</option>
-                    <option value="" <?= $row['toggle'] === '' ? 'selected' : '' ?>>No Response</option>
+                    <option value="1" <?= $row['toggle'] === '1' ? 'selected' : '' ?>>Accredited</option>
+                    <option value="0" <?= $row['toggle'] === '0' ? 'selected' : '' ?>>Cancelled / No Response</option>
+                    <option value="" <?= $row['toggle'] === '' ? 'selected' : '' ?>>Left</option>
                 </select>
             </td>
             <td class="p-0">
                 <button
-                    class="delete-btn w-full block bg-red-500 text-white rounded-lg px-3 py-2 hover:bg-red-600 transition">Delete</button>
+                    class="delete-btn w-full block bg-red-400 text-white rounded-lg px-3 py-2 hover:bg-red-600 transition">Delete</button>
             </td>
         </tr>
     <?php endforeach;
