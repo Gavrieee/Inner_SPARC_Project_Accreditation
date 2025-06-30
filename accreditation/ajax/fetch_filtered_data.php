@@ -20,24 +20,17 @@ try {
 
     // Output the filtered table rows
     foreach ($rows as $row): ?>
-        <tr data-id="<?= $row['id'] ?>">
-
-
+        <tr data-id="<?= $row['id'] ?>" data-name="<?= htmlspecialchars($row['name']) ?>">
             <td class="p-0 max-w-[160px]">
                 <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
                     <?= date('F j, Y \a\t g:i A', strtotime($row['datetime'])) ?>
-
                 </div>
             </td>
-
-
             <td class="p-0 max-w-[160px]">
                 <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
                     <?= htmlspecialchars($row['name']) ?>
                 </div>
             </td>
-
-
             <td class="p-0">
                 <select class="team-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
                     <?php foreach ($teamOptions as $teamOption): ?>

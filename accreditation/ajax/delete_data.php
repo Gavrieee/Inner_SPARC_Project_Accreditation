@@ -18,10 +18,17 @@ try {
         exit("❌ Missing ID.");
     }
 
-    $stmt = $pdo->prepare("DELETE FROM manual_data WHERE id = :id");
-    $stmt->execute([':id' => $_POST['id']]);
+    $id = $_POST['id'];
+    $name = $_POST['name'] ?? 'Unknown'; // Use name if provided, otherwise 'Unknown'
 
-    echo "🗑️ Deleted ID {$_POST['id']}";
+    $stmt = $pdo->prepare("DELETE FROM manual_data WHERE id = :id");
+    $stmt->execute([':id' => $id]);
+
+    if ($stmt->rowCount() > 0) {
+        echo "🗑️ Deleted entry: $name (ID: $id)";
+    } else {
+        echo "❌ No entry found with ID: $id";
+    }
 } catch (PDOException $e) {
     echo "❌ DB Error: " . $e->getMessage();
 }

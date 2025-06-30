@@ -78,7 +78,6 @@ $svg = [
 ];
 
 $default_blue_number = '800';
-$hover_blue_number = $default_blue_number + 100;
 
 $dataToggleTeamMonth = getToggleDataByTeamAndMonth($pdo);
 $dataTeamPerMonth = getToggleDataByTeamPerMonth($pdo);
@@ -158,118 +157,118 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- <script src="js/chart.js"></script> -->
     <script>
-    // Output all chart data and team colors as JS objects
-    const chartData = <?= json_encode($monthlyData) ?>;
-    const teamColors = <?= json_encode($teamColors) ?>;
-    const initializedCharts = {};
+        // Output all chart data and team colors as JS objects
+        const chartData = <?= json_encode($monthlyData) ?>;
+        const teamColors = <?= json_encode($teamColors) ?>;
+        const initializedCharts = {};
 
-    function initChart(monthKey) {
-        const chartId = 'chart_' + monthKey.replace(/-/g, '_');
-        if (initializedCharts[chartId]) return; // Already initialized
+        function initChart(monthKey) {
+            const chartId = 'chart_' + monthKey.replace(/-/g, '_');
+            if (initializedCharts[chartId]) return; // Already initialized
 
-        const ctx = document.getElementById(chartId);
-        if (!ctx) return;
+            const ctx = document.getElementById(chartId);
+            if (!ctx) return;
 
-        const teams = chartData[monthKey];
-        if (!teams) return;
+            const teams = chartData[monthKey];
+            if (!teams) return;
 
-        const labels = Object.keys(teams);
-        const data = Object.values(teams);
+            const labels = Object.keys(teams);
+            const data = Object.values(teams);
 
-        // Prepare colors per team
-        const backgroundColors = [];
-        const borderColors = [];
-        labels.forEach(teamName => {
-            const bg = teamColors[teamName] || teamColors['default'];
-            const bd = bg.replace('0.6', '1');
-            backgroundColors.push(bg);
-            borderColors.push(bd);
-        });
+            // Prepare colors per team
+            const backgroundColors = [];
+            const borderColors = [];
+            labels.forEach(teamName => {
+                const bg = teamColors[teamName] || teamColors['default'];
+                const bd = bg.replace('0.6', '1');
+                backgroundColors.push(bg);
+                borderColors.push(bd);
+            });
 
-        new Chart(ctx.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: monthKey,
-                    data: data,
-                    backgroundColor: backgroundColors,
-                    borderColor: borderColors,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true, // ✅ Enables responsiveness
-                maintainAspectRatio: false, // ✅ Allows canvas to fill parent height
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: monthKey,
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true, // ✅ Enables responsiveness
+                    maintainAspectRatio: false, // ✅ Allows canvas to fill parent height
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
 
-        initializedCharts[chartId] = true;
-    }
+            initializedCharts[chartId] = true;
+        }
 
-    function filterByYear(year) {
-        document.querySelectorAll('.year-group').forEach(el => {
-            el.classList.add('hidden');
-        });
-        const yearGroup = document.getElementById(`year-${year}`);
-        yearGroup.classList.remove('hidden');
+        function filterByYear(year) {
+            document.querySelectorAll('.year-group').forEach(el => {
+                el.classList.add('hidden');
+            });
+            const yearGroup = document.getElementById(`year-${year}`);
+            yearGroup.classList.remove('hidden');
 
-        // Reset month filter when year changes
-        document.getElementById('month-filter').value = 'all';
-        showAllMonths();
+            // Reset month filter when year changes
+            document.getElementById('month-filter').value = 'all';
+            showAllMonths();
 
-        // Initialize charts for all visible month sections in this year
-        yearGroup.querySelectorAll('.month-section').forEach(section => {
-            const monthKey = section.getAttribute('data-monthkey');
-            if (monthKey) initChart(monthKey);
-        });
-    }
+            // Initialize charts for all visible month sections in this year
+            yearGroup.querySelectorAll('.month-section').forEach(section => {
+                const monthKey = section.getAttribute('data-monthkey');
+                if (monthKey) initChart(monthKey);
+            });
+        }
 
-    function filterByMonth(month) {
-        const yearGroups = document.querySelectorAll('.year-group:not(.hidden)');
-        yearGroups.forEach(yearGroup => {
-            const monthSections = yearGroup.querySelectorAll('.month-section');
-            monthSections.forEach(section => {
-                if (month === 'all' || section.dataset.month === month) {
+        function filterByMonth(month) {
+            const yearGroups = document.querySelectorAll('.year-group:not(.hidden)');
+            yearGroups.forEach(yearGroup => {
+                const monthSections = yearGroup.querySelectorAll('.month-section');
+                monthSections.forEach(section => {
+                    if (month === 'all' || section.dataset.month === month) {
+                        section.classList.remove('hidden');
+                        // Initialize chart for this month section
+                        const monthKey = section.getAttribute('data-monthkey');
+                        if (monthKey) initChart(monthKey);
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        function showAllMonths() {
+            const yearGroups = document.querySelectorAll('.year-group:not(.hidden)');
+            yearGroups.forEach(yearGroup => {
+                const monthSections = yearGroup.querySelectorAll('.month-section');
+                monthSections.forEach(section => {
                     section.classList.remove('hidden');
                     // Initialize chart for this month section
                     const monthKey = section.getAttribute('data-monthkey');
                     if (monthKey) initChart(monthKey);
-                } else {
-                    section.classList.add('hidden');
-                }
+                });
             });
-        });
-    }
+        }
 
-    function showAllMonths() {
-        const yearGroups = document.querySelectorAll('.year-group:not(.hidden)');
-        yearGroups.forEach(yearGroup => {
-            const monthSections = yearGroup.querySelectorAll('.month-section');
-            monthSections.forEach(section => {
-                section.classList.remove('hidden');
-                // Initialize chart for this month section
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize charts for all visible month sections on page load
+            document.querySelectorAll('.year-group:not(.hidden) .month-section').forEach(section => {
                 const monthKey = section.getAttribute('data-monthkey');
                 if (monthKey) initChart(monthKey);
             });
         });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize charts for all visible month sections on page load
-        document.querySelectorAll('.year-group:not(.hidden) .month-section').forEach(section => {
-            const monthKey = section.getAttribute('data-monthkey');
-            if (monthKey) initChart(monthKey);
-        });
-    });
     </script>
 </head>
 
@@ -321,7 +320,7 @@ try {
 
                         <label for="datetime">
                             <span class="<?= $labelDesign ?>">Date of Entry</span>
-                            <input type="datetime-local" name="datetime" class="<?= $sharedInputStyles ?>" required>
+                            <input type="datetime-local" name="datetime" class="<?= $sharedInputStyles ?>">
                         </label>
 
                         <label for="toggle">
@@ -359,9 +358,9 @@ try {
                         continue;
                     $printedTeams[] = $team;
                     ?>
-        <span
-            class="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg shadow-sm hover:-translate-y-1 transition-all ease-in-out"><?= htmlspecialchars($team) ?></span>
-        <?php
+                    <span
+                        class="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg shadow-sm hover:-translate-y-1 transition-all ease-in-out"><?= htmlspecialchars($team) ?></span>
+                    <?php
                 endforeach;
             endforeach;
         endforeach;
@@ -387,7 +386,7 @@ try {
             <select id="filter-team" class="<?= $filterClass ?>">
                 <option value="">All Teams</option>
                 <?php foreach ($teamOptions as $team): ?>
-                <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
+                    <option value="<?= htmlspecialchars($team) ?>"><?= htmlspecialchars($team) ?></option>
                 <?php endforeach; ?>
             </select>
 
@@ -401,7 +400,7 @@ try {
             <select id="filter-month" class="<?= $filterClass ?>">
                 <option value="">All Months</option>
                 <?php foreach ($monthsIndex as $num => $name): ?>
-                <option value="<?= str_pad($num, 2, '0', STR_PAD_LEFT) ?>"><?= $name ?></option>
+                    <option value="<?= str_pad($num, 2, '0', STR_PAD_LEFT) ?>"><?= $name ?></option>
                 <?php endforeach; ?>
             </select>
 
@@ -432,58 +431,57 @@ try {
                 </thead>
                 <tbody id="user-table-body" class="rounded-lg">
                     <?php foreach ($rows as $row): ?>
-                    <tr data-id="<?= $row['id'] ?>">
-                        <!-- Static Date -->
+                        <tr data-id="<?= $row['id'] ?>" data-name="<?= $row['name'] ?>">
+                            <!-- Static Date -->
 
-                        <td class="p-0 max-w-[160px]">
-                            <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
-                                <!-- Changes datetime format to readable view -->
-                                <?= date('F j, Y \a\t g:i A', strtotime($row['datetime'])) ?>
-                            </div>
-                        </td>
-
-
-                        <!-- Static Name -->
-                        <td class="p-0 max-w-[160px]">
-                            <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
-                                <?= htmlspecialchars($row['name']) ?>
-                            </div>
-                        </td>
-
-                        <!-- Team Select -->
-                        <td class="p-0">
-                            <select
-                                class="team-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
-                                <?php foreach ($teamOptions as $teamOption): ?>
-                                <option value="<?= $teamOption ?>"
-                                    <?= $row['team'] === $teamOption ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($teamOption) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
+                            <td class="p-0 max-w-[160px]">
+                                <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
+                                    <!-- Changes datetime format to readable view -->
+                                    <?= date('F j, Y \a\t g:i A', strtotime($row['datetime'])) ?>
+                                </div>
+                            </td>
 
 
-                        <!-- Toggle Select -->
-                        <td class="p-0">
-                            <select
-                                class="toggle-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
-                                <option value="1" <?= $row['toggle'] === '1' ? 'selected' : '' ?>>Accredited</option>
-                                <option value="0" <?= $row['toggle'] === '0' ? 'selected' : '' ?>>Cancelled / No
-                                    Response</option>
-                                <option value="" <?= $row['toggle'] === '' ? 'selected' : '' ?>>Left</option>
-                            </select>
-                        </td>
+                            <!-- Static Name -->
+                            <td class="p-0 max-w-[160px]">
+                                <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm truncate whitespace-nowrap">
+                                    <?= htmlspecialchars($row['name']) ?>
+                                </div>
+                            </td>
 
-                        <!-- Delete Button -->
-                        <td class="p-0">
-                            <button
-                                class="delete-btn w-full block bg-red-400 text-white rounded-lg px-3 py-2 hover:bg-red-600 transition">
-                                Delete
-                            </button>
-                        </td>
+                            <!-- Team Select -->
+                            <td class="p-0">
+                                <select
+                                    class="team-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
+                                    <?php foreach ($teamOptions as $teamOption): ?>
+                                        <option value="<?= $teamOption ?>" <?= $row['team'] === $teamOption ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($teamOption) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
 
-                    </tr>
+
+                            <!-- Toggle Select -->
+                            <td class="p-0">
+                                <select
+                                    class="toggle-select w-full block bg-gray-100 rounded-lg px-3 py-2 focus:outline-none">
+                                    <option value="1" <?= $row['toggle'] === '1' ? 'selected' : '' ?>>Accredited</option>
+                                    <option value="0" <?= $row['toggle'] === '0' ? 'selected' : '' ?>>Cancelled / No
+                                        Response</option>
+                                    <option value="" <?= $row['toggle'] === '' ? 'selected' : '' ?>>Left</option>
+                                </select>
+                            </td>
+
+                            <!-- Delete Button -->
+                            <td class="p-0">
+                                <button
+                                    class="delete-btn w-full block bg-red-400 text-white rounded-lg px-3 py-2 hover:bg-red-600 transition">
+                                    Delete
+                                </button>
+                            </td>
+
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -501,7 +499,7 @@ try {
                     <select onchange="filterByYear(this.value)"
                         class="font-bold mb-4 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
                         <?php foreach (array_keys($data) as $year): ?>
-                        <option value="<?= $year ?>"><?= $year ?></option>
+                            <option value="<?= $year ?>"><?= $year ?></option>
                         <?php endforeach; ?>
                     </select>
                     and
@@ -509,7 +507,7 @@ try {
                         class="font-bold mb-4 text-center text-blue-<?= $default_blue_number; ?> bg-transparent appearance-none1">
                         <option value="all">All Months</option>
                         <?php foreach ($monthsIndex as $num => $name): ?>
-                        <option value="<?= $name ?>"><?= $name ?></option>
+                            <option value="<?= $name ?>"><?= $name ?></option>
                         <?php endforeach; ?>
                     </select>
                 </span>
@@ -530,160 +528,160 @@ try {
     </label>
 
     <?php foreach ($data as $year => $months): ?>
-    <div id="year-<?= $year ?>"
-        class="year-group <?= $year !== array_key_first($data) ? 'hidden' : '' ?> text-gray-700">
+        <div id="year-<?= $year ?>"
+            class="year-group <?= $year !== array_key_first($data) ? 'hidden' : '' ?> text-gray-700">
 
-        <!-- display year -->
-        <!-- <h2 class="text-lg font-bold text-center text-blue-<?= $default_blue_number; ?>">Year</h2> -->
+            <!-- display year -->
+            <!-- <h2 class="text-lg font-bold text-center text-blue-<?= $default_blue_number; ?>">Year</h2> -->
 
-        <!-- DISPLAY THE YEAR -->
-        <div class="grid grid-cols-[1fr_auto_1fr] place-items-center">
-            <hr class="w-full border-blue-<?= $default_blue_number; ?>">
-            <h2 class="text-[42px] px-4 font-bold mt-4 mb-6 text-center text-blue-<?= $default_blue_number; ?>">
-                <?= $year ?>
-            </h2>
-            <hr class="w-full border-blue-<?= $default_blue_number; ?>">
-        </div>
+            <!-- DISPLAY THE YEAR -->
+            <div class="grid grid-cols-[1fr_auto_1fr] place-items-center">
+                <hr class="w-full border-blue-<?= $default_blue_number; ?>">
+                <h2 class="text-[42px] px-4 font-bold mt-4 mb-6 text-center text-blue-<?= $default_blue_number; ?>">
+                    <?= $year ?>
+                </h2>
+                <hr class="w-full border-blue-<?= $default_blue_number; ?>">
+            </div>
 
-        <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
-            <h3 class="text-xl font-semibold my-2">Legend</h3>
-            <hr>
-            <div class="flex flex-col justify-center items-center gap-4 my-4 md:flex-row sm:gap-4">
-                <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
-                    title="Finished Accreditation">
-                    <?= $svg['check'] ?>
-                    <span class="ml-2">Accredited Agents<br><span class="text-sm opacity-50">(Active
-                            agents)</span></span>
-                </div>
-                <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
-                    title="Cancelled Accreditation">
-                    <?= $svg['x_mark'] ?>
-                    <span class="ml-2">Cancelled / Unresponsive<br><span class="text-sm opacity-50">(No response or
-                            cancelled applications)</span></span>
-                </div>
-                <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
-                    title="No response from Agent">
-                    <?php echo str_replace('bg-red-500', 'text-gray-500', $svg['signal_lost']);
+            <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
+                <h3 class="text-xl font-semibold my-2">Legend</h3>
+                <hr>
+                <div class="flex flex-col justify-center items-center gap-4 my-4 md:flex-row sm:gap-4">
+                    <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
+                        title="Finished Accreditation">
+                        <?= $svg['check'] ?>
+                        <span class="ml-2">Accredited Agents<br><span class="text-sm opacity-50">(Active
+                                agents)</span></span>
+                    </div>
+                    <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
+                        title="Cancelled Accreditation">
+                        <?= $svg['x_mark'] ?>
+                        <span class="ml-2">Cancelled / Unresponsive<br><span class="text-sm opacity-50">(No response or
+                                cancelled applications)</span></span>
+                    </div>
+                    <div class="flex flex-col justify-center items-center font-semibold border rounded-xl p-2 py-4 text-center gap-1"
+                        title="No response from Agent">
+                        <?php echo str_replace('bg-red-500', 'text-gray-500', $svg['signal_lost']);
                         ?>
-                    <span class="ml-2">Former Agents <br><span class="text-sm opacity-50">(Resigned or
-                            withdrawn)</span></span>
+                        <span class="ml-2">Former Agents <br><span class="text-sm opacity-50">(Resigned or
+                                withdrawn)</span></span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6">
+            <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6">
 
-            <?php
+                <?php
                 // Get data for current year
                 $yearData = $dataTeamPerMonth[$year] ?? [];
                 foreach ($yearData as $toggle => $team_s):
                     ?>
 
-            <!-- DISPLAY THE MARK LABELS (FROM LEGEND) -->
-            <div class="mb-2">
-                <div class="flex flex-row justify-between items-end">
+                    <!-- DISPLAY THE MARK LABELS (FROM LEGEND) -->
+                    <div class="mb-2">
+                        <div class="flex flex-row justify-between items-end">
 
-                    <h2 class="text-xl font-bold">
-                        <?= $toggleLabels[$toggle] ?? 'Unknown' ?>
-                    </h2>
-                    <h2 class="text-2xl font-semibold text-gray-700">
-                        <?= $year ?>
-                    </h2>
-                </div>
+                            <h2 class="text-xl font-bold">
+                                <?= $toggleLabels[$toggle] ?? 'Unknown' ?>
+                            </h2>
+                            <h2 class="text-2xl font-semibold text-gray-700">
+                                <?= $year ?>
+                            </h2>
+                        </div>
 
-                <hr class="h-px my-4 mt-2">
-            </div>
-
-            <!-- 3-column grid -->
-            <div class="grid grid-cols-[auto,3fr,auto] gap-4 mb-4 hidden md:grid">
-                <!-- Teams per toggle -->
-                <div class="">
-                    <div class="bg-white border rounded-xl p-2 px-4 text-center flex flex-col gap-4 overflow-x-auto">
-                        <div class="font-bold">Teams</div>
-                        <?php foreach (array_keys($team_s) as $team): ?>
-                        <div class=""><?= htmlspecialchars($team) ?></div>
-                        <?php endforeach; ?>
+                        <hr class="h-px my-4 mt-2">
                     </div>
 
-                    <div class="font-bold border rounded-xl p-2 mt-4 text-center bg-white flex flex-col gap-4">
-                        Total
-                    </div>
-                </div>
+                    <!-- 3-column grid -->
+                    <div class="grid grid-cols-[auto,3fr,auto] gap-4 mb-4 hidden md:grid">
+                        <!-- Teams per toggle -->
+                        <div class="">
+                            <div class="bg-white border rounded-xl p-2 px-4 text-center flex flex-col gap-4 overflow-x-auto">
+                                <div class="font-bold">Teams</div>
+                                <?php foreach (array_keys($team_s) as $team): ?>
+                                    <div class=""><?= htmlspecialchars($team) ?></div>
+                                <?php endforeach; ?>
+                            </div>
 
-                <!-- Month grid -->
-                <div class="w-full bg-white overflow-x-auto text-gray-700 hide-scrollbar rounded-xl">
-                    <div class="flex gap-4 min-w-max">
-                        <?php for ($m = 1; $m <= 12; $m++): ?>
-                        <div class="w-[130px]">
-                            <div
-                                class="bg-gray-50 border rounded-xl p-2 text-center flex flex-col justify-evenly items-center gap-4">
-                                <div class="font-bold"><?= $monthsIndex[$m] ?></div>
-                                <?php
+                            <div class="font-bold border rounded-xl p-2 mt-4 text-center bg-white flex flex-col gap-4">
+                                Total
+                            </div>
+                        </div>
+
+                        <!-- Month grid -->
+                        <div class="w-full bg-white overflow-x-auto text-gray-700 hide-scrollbar rounded-xl">
+                            <div class="flex gap-4 min-w-max">
+                                <?php for ($m = 1; $m <= 12; $m++): ?>
+                                    <div class="w-[130px]">
+                                        <div
+                                            class="bg-gray-50 border rounded-xl p-2 text-center flex flex-col justify-evenly items-center gap-4">
+                                            <div class="font-bold"><?= $monthsIndex[$m] ?></div>
+                                            <?php
                                             $monthTotal = 0;
                                             foreach ($team_s as $team => $count_s):
                                                 $count = $count_s[$m] ?? 0;
                                                 $monthTotal += $count;
                                                 ?>
-                                <p class=""><?= $count ?></p>
+                                                <p class=""><?= $count ?></p>
+                                            <?php endforeach; ?>
+                                        </div>
+
+                                        <div
+                                            class="font-semibold border rounded-xl p-2 mt-4 text-center bg-white flex flex-col gap-4">
+                                            <?= $monthTotal ?>
+                                        </div>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+
+                        <!-- Grand total -->
+                        <div class="text-white">
+                            <div
+                                class="bg-blue-<?= $default_blue_number; ?> border rounded-xl p-2 px-4 text-center flex flex-col gap-4 overflow-x-auto">
+                                <div class="font-bold">Annual Total</div>
+                                <?php foreach ($team_s as $team => $count_s): ?>
+                                    <div class="font-semibold"><?= array_sum($count_s) ?></div>
                                 <?php endforeach; ?>
                             </div>
 
                             <div
-                                class="font-semibold border rounded-xl p-2 mt-4 text-center bg-white flex flex-col gap-4">
-                                <?= $monthTotal ?>
+                                class="font-bold border rounded-xl p-2 mt-4 text-center bg-blue-<?= $default_blue_number; ?> flex flex-col gap-4">
+                                <?= array_sum(array_map('array_sum', $team_s)) ?>
                             </div>
                         </div>
-                        <?php endfor; ?>
-                    </div>
-                </div>
-
-                <!-- Grand total -->
-                <div class="text-white">
-                    <div
-                        class="bg-blue-<?= $default_blue_number; ?> border rounded-xl p-2 px-4 text-center flex flex-col gap-4 overflow-x-auto">
-                        <div class="font-bold">Annual Total</div>
-                        <?php foreach ($team_s as $team => $count_s): ?>
-                        <div class="font-semibold"><?= array_sum($count_s) ?></div>
-                        <?php endforeach; ?>
                     </div>
 
-                    <div
-                        class="font-bold border rounded-xl p-2 mt-4 text-center bg-blue-<?= $default_blue_number; ?> flex flex-col gap-4">
-                        <?= array_sum(array_map('array_sum', $team_s)) ?>
-                    </div>
-                </div>
+                <?php endforeach; ?>
+
             </div>
 
-            <?php endforeach; ?>
-
-        </div>
-
-        <?php foreach ($months as $month => $teams): ?>
-        <?php
+            <?php foreach ($months as $month => $teams): ?>
+                <?php
                 $monthNumber = array_search($month, $monthsIndex);
                 $currentMonthKey = sprintf('%04d-%02d', $year, $monthNumber);
                 ?>
-        <div class="month-section" data-month="<?= htmlspecialchars($month) ?>" data-monthkey="<?= $currentMonthKey ?>">
+                <div class="month-section" data-month="<?= htmlspecialchars($month) ?>" data-monthkey="<?= $currentMonthKey ?>">
 
-            <div class="grid grid-cols-[1fr_auto_1fr] place-items-center">
-                <hr class="w-full border-blue-<?= $default_blue_number; ?>">
-                <h2
-                    class="text-[24px] md:text-[32px] px-4 font-bold mt-4 mb-6 text-center text-blue-<?= $default_blue_number; ?>">
-                    <?= htmlspecialchars($month) ?>
-                </h2>
-                <hr class="w-full border-blue-<?= $default_blue_number; ?>">
-            </div>
+                    <div class="grid grid-cols-[1fr_auto_1fr] place-items-center">
+                        <hr class="w-full border-blue-<?= $default_blue_number; ?>">
+                        <h2
+                            class="text-[24px] md:text-[32px] px-4 font-bold mt-4 mb-6 text-center text-blue-<?= $default_blue_number; ?>">
+                            <?= htmlspecialchars($month) ?>
+                        </h2>
+                        <hr class="w-full border-blue-<?= $default_blue_number; ?>">
+                    </div>
 
-            <?php foreach ($teams as $team => $quarters): ?>
-            <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
-                <!-- display team -->
-                <h3
-                    class="text-xl md:text-2xl font-semibold my-2 flex justify-between items-center md:flex-row flex-col">
-                    <p class="text-blue-<?= $default_blue_number; ?> font-semibold"><?= htmlspecialchars($team) ?> </p>
-                    <p class="hidden md:block"><?= htmlspecialchars($month) ?></p>
-                </h3>
-                <hr class="hidden md:block">
-                <?php
+                    <?php foreach ($teams as $team => $quarters): ?>
+                        <div class="bg-white rounded-2xl shadow pt-2 pb-1 px-4 mb-6 ">
+                            <!-- display team -->
+                            <h3
+                                class="text-xl md:text-2xl font-semibold my-2 flex justify-between items-center md:flex-row flex-col">
+                                <p class="text-blue-<?= $default_blue_number; ?> font-semibold"><?= htmlspecialchars($team) ?> </p>
+                                <p class="hidden md:block"><?= htmlspecialchars($month) ?></p>
+                            </h3>
+                            <hr class="hidden md:block">
+                            <?php
                             $hasWeek5 = isset($quarters['Week 5']) && (
                                 ($quarters['Week 5']['1'] ?? 0) > 0 ||
                                 ($quarters['Week 5']['0'] ?? 0) > 0 ||
@@ -691,30 +689,30 @@ try {
                             );
                             ?>
 
-                <div
-                    class="grid <?= $hasWeek5 ? 'grid-cols-[80px_repeat(6,_1fr)]' : 'grid-cols-[80px_repeat(5,_1fr)]' ?> gap-4 py-4 hidden md:grid">
+                            <div
+                                class="grid <?= $hasWeek5 ? 'grid-cols-[80px_repeat(6,_1fr)]' : 'grid-cols-[80px_repeat(5,_1fr)]' ?> gap-4 py-4 hidden md:grid">
 
-                    <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
-                        <div class="font-bold">Marks</div>
-                        <div class="flex justify-center items-center gap-2">
-                            <button class="flex justify-center items-center font-bold" title="Finished Accreditation">
-                                <?= $svg['check'] ?>
-                            </button>
-                        </div>
-                        <div class="flex justify-center items-center gap-2">
-                            <button class="flex justify-center items-center font-bold" title="Cancelled Accreditation">
-                                <?= $svg['x_mark'] ?>
-                            </button>
-                        </div>
-                        <div class="flex justify-center items-center gap-2">
-                            <button class="flex justify-center items-center font-bold" title="No Response from Agent">
-                                <?= $svg['signal_lost'] ?>
-                            </button>
-                        </div>
-                    </div>
+                                <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
+                                    <div class="font-bold">Marks</div>
+                                    <div class="flex justify-center items-center gap-2">
+                                        <button class="flex justify-center items-center font-bold" title="Finished Accreditation">
+                                            <?= $svg['check'] ?>
+                                        </button>
+                                    </div>
+                                    <div class="flex justify-center items-center gap-2">
+                                        <button class="flex justify-center items-center font-bold" title="Cancelled Accreditation">
+                                            <?= $svg['x_mark'] ?>
+                                        </button>
+                                    </div>
+                                    <div class="flex justify-center items-center gap-2">
+                                        <button class="flex justify-center items-center font-bold" title="No Response from Agent">
+                                            <?= $svg['signal_lost'] ?>
+                                        </button>
+                                    </div>
+                                </div>
 
 
-                    <?php
+                                <?php
                                 $weekLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
                                 if ($hasWeek5) {
                                     $weekLabels[] = 'Week 5';
@@ -722,29 +720,29 @@ try {
                                 foreach ($weekLabels as $q):
                                     ?>
 
-                    <!-- PRINTS THE WEEKS -->
-                    <div class="border rounded-xl p-2 text-center bg-gray-50 flex flex-col gap-4 ">
-                        <div class="font-bold">
-                            <span class="hidden xl:inline"><?= $q ?></span>
-                            <span class="inline xl:hidden"><?= 'W' . substr($q, -1) ?></span>
-                        </div>
+                                    <!-- PRINTS THE WEEKS -->
+                                    <div class="border rounded-xl p-2 text-center bg-gray-50 flex flex-col gap-4 ">
+                                        <div class="font-bold">
+                                            <span class="hidden xl:inline"><?= $q ?></span>
+                                            <span class="inline xl:hidden"><?= 'W' . substr($q, -1) ?></span>
+                                        </div>
 
 
-                        <div class=""><?= $quarters[$q]['1'] ?? 0 ?></div>
-                        <div class=""><?= $quarters[$q]['0'] ?? 0 ?></div>
-                        <div class=""><?= $quarters[$q]['blank'] ?? 0 ?></div>
-                    </div>
-                    <?php endforeach; ?>
-                    <!-- this will show TOTAL per marks -->
-                    <div
-                        class="rounded-xl py-2 text-center flex w-full h-full flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white">
-                        <div class="font-bold">
-                            <span class="hidden xl:inline">Month Total</span>
-                            <span class="inline xl:hidden">MT</span>
-                        </div>
+                                        <div class=""><?= $quarters[$q]['1'] ?? 0 ?></div>
+                                        <div class=""><?= $quarters[$q]['0'] ?? 0 ?></div>
+                                        <div class=""><?= $quarters[$q]['blank'] ?? 0 ?></div>
+                                    </div>
+                                <?php endforeach; ?>
+                                <!-- this will show TOTAL per marks -->
+                                <div
+                                    class="rounded-xl py-2 text-center flex w-full h-full flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white">
+                                    <div class="font-bold">
+                                        <span class="hidden xl:inline">Month Total</span>
+                                        <span class="inline xl:hidden">MT</span>
+                                    </div>
 
 
-                        <?php
+                                    <?php
                                     $totals_by_quarter = [
                                         'Week 1' => 0,
                                         'Week 2' => 0,
@@ -769,177 +767,177 @@ try {
                                     $grand_total = $total_check + $total_x + $total_blank;
                                     ?>
 
-                        <div class="hover:bg-white group">
-                            <span
-                                class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
-                                <?= $total_check ?>
-                            </span>
-                        </div>
-                        <div class="hover:bg-white group">
-                            <span
-                                class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
-                                <?= $total_x ?>
-                            </span>
-                        </div>
-                        <div class="hover:bg-white group">
-                            <span
-                                class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
-                                <?= $total_blank ?>
-                            </span>
-                        </div>
-                    </div>
+                                    <div class="hover:bg-white group">
+                                        <span
+                                            class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
+                                            <?= $total_check ?>
+                                        </span>
+                                    </div>
+                                    <div class="hover:bg-white group">
+                                        <span
+                                            class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
+                                            <?= $total_x ?>
+                                        </span>
+                                    </div>
+                                    <div class="hover:bg-white group">
+                                        <span
+                                            class="font-semibold flex justify-center items-center group-hover:text-blue-<?= $default_blue_number; ?>">
+                                            <?= $total_blank ?>
+                                        </span>
+                                    </div>
+                                </div>
 
-                    <!-- Grand Total -->
-                    <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
-                        <div class="font-bold">Total</div>
-                    </div>
+                                <!-- Grand Total -->
+                                <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
+                                    <div class="font-bold">Total</div>
+                                </div>
 
-                    <?php foreach ($weekLabels as $q): ?>
-                    <div class="border font-semibold rounded-xl p-2 text-center">
-                        <?= $totals_by_quarter[$q] ?>
-                    </div>
+                                <?php foreach ($weekLabels as $q): ?>
+                                    <div class="border font-semibold rounded-xl p-2 text-center">
+                                        <?= $totals_by_quarter[$q] ?>
+                                    </div>
+                                <?php endforeach; ?>
+
+                                <div
+                                    class="border rounded-xl p-2 text-center flex flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white font-semibold">
+                                    <?= $grand_total ?>
+                                </div>
+                            </div>
+                        </div>
+
                     <?php endforeach; ?>
 
-                    <div
-                        class="border rounded-xl p-2 text-center flex flex-col gap-4 bg-blue-<?= $default_blue_number; ?> text-white font-semibold">
-                        <?= $grand_total ?>
-                    </div>
-                </div>
-            </div>
+                    <!-- DISPLAY CHARTS FOR EACH MONTH -->
+                    <div class="bg-white rounded-2xl shadow pt-2 pb-4 px-4 mb-6">
 
-            <?php endforeach; ?>
-
-            <!-- DISPLAY CHARTS FOR EACH MONTH -->
-            <div class="bg-white rounded-2xl shadow pt-2 pb-4 px-4 mb-6">
-                <?php
+                        <?php
                         // Always render the chart canvas for every month-section
                         if (isset($monthlyData[$currentMonthKey])):
                             ?>
-                <h3
-                    class="text-xl md:text-2xl font-semibold my-2 flex justify-between items-center md:flex-row flex-col">
-                    <p class="text-blue-<?= $default_blue_number; ?> font-semibold">
-                        <?= date('F', strtotime($currentMonthKey . '-01')) // Month only ?>
-                    </p>
+                            <h3
+                                class="text-xl md:text-2xl font-semibold my-2 flex justify-between items-center md:flex-row flex-col">
+                                <p class="text-blue-<?= $default_blue_number; ?> font-semibold">
+                                    <?= date('F', strtotime($currentMonthKey . '-01')) // Month only ?>
+                                </p>
 
-                    <p class="hidden md:block">
-                        <?= date('Y', strtotime($currentMonthKey . '-01')) // Year only ?>
-                    </p>
-                </h3>
+                                <p class="hidden md:block">
+                                    <?= date('Y', strtotime($currentMonthKey . '-01')) // Year only ?>
+                                </p>
+                            </h3>
 
-                <!-- <div class="mb-10 hidden1 lg:block1">
-                                <hr>
-                                <canvas id="chart_<?= str_replace('-', '_', $currentMonthKey) ?>"
-                                    class="w-full max-w-3xl mx-auto"></canvas>
-                            </div> -->
-                <div class="relative w-full max-w-full sm:max-w-3xl mx-auto h-[300px] sm:h-[400px]">
-                    <canvas id="chart_<?= str_replace('-', '_', $currentMonthKey) ?>" class="w-full h-full"></canvas>
+                            <hr class="h-px my-4 mt-2">
+
+                            <div class="relative w-full max-w-full sm:max-w-3xl mx-auto h-[300px] sm:h-[400px]">
+                                <canvas id="chart_<?= str_replace('-', '_', $currentMonthKey) ?>" class="w-full h-full"></canvas>
+                            </div>
+
+                        <?php endif; ?>
+                    </div>
                 </div>
-
-                <?php endif; ?>
-            </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
-    </div>
     <?php endforeach; ?>
 
     <!-- Manual Data Table JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const nameInput = document.getElementById("search-name");
-        const teamFilter = document.getElementById("filter-team");
-        const toggleFilter = document.getElementById("filter-toggle");
-        const monthFilter = document.getElementById("filter-month");
+        document.addEventListener("DOMContentLoaded", function () {
+            const nameInput = document.getElementById("search-name");
+            const teamFilter = document.getElementById("filter-team");
+            const toggleFilter = document.getElementById("filter-toggle");
+            const monthFilter = document.getElementById("filter-month");
 
-        let searchTimeout; // For debouncing the search
+            let searchTimeout; // For debouncing the search
 
-        function fetchFilteredData() {
-            const name = nameInput.value;
-            const team = teamFilter.value;
-            const toggle = toggleFilter.value;
-            const month = monthFilter.value;
+            function fetchFilteredData() {
+                const name = nameInput.value;
+                const team = teamFilter.value;
+                const toggle = toggleFilter.value;
+                const month = monthFilter.value;
 
-            // Show loading indicator
-            const tableBody = document.getElementById("user-table-body");
-            tableBody.innerHTML =
-                '<tr><td colspan="5" class="text-center py-4 text-gray-500">Loading...</td></tr>';
+                // Show loading indicator
+                const tableBody = document.getElementById("user-table-body");
+                tableBody.innerHTML =
+                    '<tr><td colspan="5" class="text-center py-4 text-gray-500">Loading...</td></tr>';
 
-            const xhr = new XMLHttpRequest();
-            xhr.open("POST", "ajax/fetch_filtered_data.php", true);
-            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    document.getElementById("user-table-body").innerHTML = xhr.responseText;
-                    // Reattach jQuery event handlers after content update
-                    attachEventHandlers();
-                } else {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "ajax/fetch_filtered_data.php", true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        document.getElementById("user-table-body").innerHTML = xhr.responseText;
+                        // Reattach jQuery event handlers after content update
+                        attachEventHandlers();
+                    } else {
+                        tableBody.innerHTML =
+                            '<tr><td colspan="5" class="text-center py-4 text-red-500">Error loading data</td></tr>';
+                    }
+                };
+                xhr.onerror = function () {
                     tableBody.innerHTML =
                         '<tr><td colspan="5" class="text-center py-4 text-red-500">Error loading data</td></tr>';
-                }
-            };
-            xhr.onerror = function() {
-                tableBody.innerHTML =
-                    '<tr><td colspan="5" class="text-center py-4 text-red-500">Error loading data</td></tr>';
-            };
-            xhr.send(
-                `name=${encodeURIComponent(name)}&team=${encodeURIComponent(team)}&toggle=${encodeURIComponent(toggle)}&month=${encodeURIComponent(month)}`
-            );
-        }
+                };
+                xhr.send(
+                    `name=${encodeURIComponent(name)}&team=${encodeURIComponent(team)}&toggle=${encodeURIComponent(toggle)}&month=${encodeURIComponent(month)}`
+                );
+            }
 
-        // Debounced search function
-        function debouncedSearch() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(fetchFilteredData, 500); // 500ms delay
-        }
+            // Debounced search function
+            function debouncedSearch() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(fetchFilteredData, 500); // 500ms delay
+            }
 
-        // Add event listeners with different behaviors
-        nameInput.addEventListener("input", debouncedSearch); // Debounced for typing
-        teamFilter.addEventListener("change", fetchFilteredData); // Immediate for dropdowns
-        toggleFilter.addEventListener("change", fetchFilteredData); // Immediate for dropdowns
-        monthFilter.addEventListener("change", fetchFilteredData); // Immediate for month
-    });
-
-    function attachEventHandlers() {
-        // Automatically update on change of team or toggle
-        $('select.team-select, select.toggle-select').off('change').on('change', function() {
-            const row = $(this).closest('tr');
-            const id = row.data('id');
-            const team = row.find('.team-select').val();
-            const toggle = row.find('.toggle-select').val();
-
-            $.post('ajax/update_data.php', {
-                id,
-                team,
-                toggle
-            }, function(response) {
-                console.log("✅ " + response);
-            }).fail(function() {
-                alert("❌ Failed to update.");
-            });
+            // Add event listeners with different behaviors
+            nameInput.addEventListener("input", debouncedSearch); // Debounced for typing
+            teamFilter.addEventListener("change", fetchFilteredData); // Immediate for dropdowns
+            toggleFilter.addEventListener("change", fetchFilteredData); // Immediate for dropdowns
+            monthFilter.addEventListener("change", fetchFilteredData); // Immediate for month
         });
 
-        // Delete button event handler
-        $('.delete-btn').off('click').on('click', function() {
-            if (!confirm("Are you sure you want to delete this entry?")) return;
+        function attachEventHandlers() {
+            // Automatically update on change of team or toggle
+            $('select.team-select, select.toggle-select').off('change').on('change', function () {
+                const row = $(this).closest('tr');
+                const id = row.data('id');
+                const team = row.find('.team-select').val();
+                const toggle = row.find('.toggle-select').val();
 
-            const row = $(this).closest('tr');
-            const id = row.data('id');
-
-            $.post('ajax/delete_data.php', {
-                id
-            }, function(response) {
-                alert(response);
-                row.remove();
-            }).fail(function() {
-                alert("❌ Failed to delete.");
+                $.post('ajax/update_data.php', {
+                    id,
+                    team,
+                    toggle
+                }, function (response) {
+                    console.log("✅ " + response);
+                }).fail(function () {
+                    alert("❌ Failed to update.");
+                });
             });
-        });
-    }
 
-    $(document).ready(function() {
-        // Initial attachment of event handlers
-        attachEventHandlers();
-    });
+            // Delete button event handler
+            $('.delete-btn').off('click').on('click', function () {
+                if (!confirm("Are you sure you want to delete this entry?")) return;
+
+                const row = $(this).closest('tr');
+                const id = row.data('id');
+                const name = row.data('name');
+
+                $.post('ajax/delete_data.php', {
+                    id,
+                    name
+                }, function (response) {
+                    alert(response);
+                    row.remove();
+                }).fail(function () {
+                    alert("❌ Failed to delete.");
+                });
+            });
+        }
+
+        $(document).ready(function () {
+            // Initial attachment of event handlers
+            attachEventHandlers();
+        });
     </script>
 
 </body>
