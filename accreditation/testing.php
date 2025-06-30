@@ -32,18 +32,7 @@ foreach ($dbResults as $row) {
 
     $year = $date->format('Y');
     $month = $date->format('F');
-    $day = (int) $date->format('j');
-
-    // EDIT THIS FOR WEEK 5!
-
-    $quarter = match (true) {
-        $day <= 7 => 'Week 1',
-        $day <= 14 => 'Week 2',
-        $day <= 21 => 'Week 3',
-        $day <= 28 => 'Week 4',
-        default => 'Week 5', // For days 29–31
-    };
-
+    $quarter = getMondayWeekOfMonth($date);
 
     if (!isset($data[$year][$month][$team])) {
         $data[$year][$month][$team] = [
@@ -52,6 +41,7 @@ foreach ($dbResults as $row) {
             'Week 3' => ['1' => 0, '0' => 0, 'blank' => 0],
             'Week 4' => ['1' => 0, '0' => 0, 'blank' => 0],
             'Week 5' => ['1' => 0, '0' => 0, 'blank' => 0],
+            'Week 6' => ['1' => 0, '0' => 0, 'blank' => 0],
         ];
     }
 
@@ -105,7 +95,7 @@ $toggleLabels = [
 
     '0' => '<div class="flex pt-2 items-center gap-2 md:gap-1 text-red-600 font-semibold md:text-lg text-[14px]">'
         . $svg['x_mark'] . '<span>Cancelled / Unresponsive <span class="text-sm opacity-50 text-gray-700">(No response or
-                                cancelled applications)</span></div>',
+                                cancelled applications)</span></span></div>',
 
     '' => '<div class="flex pt-2 items-center gap-2 md:gap-1 text-yellow-600 font-semibold md:text-lg text-[14px]">'
         . $svg['signal_lost'] . '<span>Former Agents <span class="text-sm opacity-50 text-gray-700">(Resigned or
@@ -682,15 +672,15 @@ try {
                             </h3>
                             <hr class="hidden md:block">
                             <?php
-                            $hasWeek5 = isset($quarters['Week 5']) && (
-                                ($quarters['Week 5']['1'] ?? 0) > 0 ||
-                                ($quarters['Week 5']['0'] ?? 0) > 0 ||
-                                ($quarters['Week 5']['blank'] ?? 0) > 0
+                            $hasWeek6 = isset($quarters['Week 6']) && (
+                                ($quarters['Week 6']['1'] ?? 0) > 0 ||
+                                ($quarters['Week 6']['0'] ?? 0) > 0 ||
+                                ($quarters['Week 6']['blank'] ?? 0) > 0
                             );
                             ?>
 
                             <div
-                                class="grid <?= $hasWeek5 ? 'grid-cols-[80px_repeat(6,_1fr)]' : 'grid-cols-[80px_repeat(5,_1fr)]' ?> gap-4 py-4 hidden md:grid">
+                                class="grid <?= $hasWeek6 ? 'grid-cols-[80px_repeat(7,_1fr)]' : 'grid-cols-[80px_repeat(6,_1fr)]' ?> gap-4 py-4 hidden md:grid">
 
                                 <div class="border rounded-xl p-2 text-center flex flex-col gap-4">
                                     <div class="font-bold">Marks</div>
@@ -713,9 +703,9 @@ try {
 
 
                                 <?php
-                                $weekLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                                if ($hasWeek5) {
-                                    $weekLabels[] = 'Week 5';
+                                $weekLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                                if ($hasWeek6) {
+                                    $weekLabels[] = 'Week 6';
                                 }
                                 foreach ($weekLabels as $q):
                                     ?>
@@ -743,24 +733,25 @@ try {
 
 
                                     <?php
-                                    $totals_by_quarter = [
-                                        'Week 1' => 0,
-                                        'Week 2' => 0,
-                                        'Week 3' => 0,
-                                        'Week 4' => 0,
-                                        'Week 5' => 0,
-                                    ];
+                                    $totals_by_quarter = [];
+                                    foreach ($weekLabels as $label) {
+                                        $totals_by_quarter[$label] = 0;
+                                    }
 
                                     $total_check = 0;
                                     $total_x = 0;
                                     $total_blank = 0;
 
+                                    // Only process quarters that are in our weekLabels array
                                     foreach ($quarters as $quarter_name => $counts) {
-                                        $total_check += $counts['1'] ?? 0;
-                                        $total_x += $counts['0'] ?? 0;
-                                        $total_blank += $counts['blank'] ?? 0;
+                                        // Only process if this quarter is in our weekLabels
+                                        if (in_array($quarter_name, $weekLabels)) {
+                                            $total_check += $counts['1'] ?? 0;
+                                            $total_x += $counts['0'] ?? 0;
+                                            $total_blank += $counts['blank'] ?? 0;
 
-                                        $totals_by_quarter[$quarter_name] += ($counts['1'] ?? 0) + ($counts['0'] ?? 0) + ($counts['blank'] ?? 0);
+                                            $totals_by_quarter[$quarter_name] += ($counts['1'] ?? 0) + ($counts['0'] ?? 0) + ($counts['blank'] ?? 0);
+                                        }
                                     }
 
                                     // Grand total (sum of all marks)
@@ -792,9 +783,9 @@ try {
                                     <div class="font-bold">Total</div>
                                 </div>
 
-                                <?php foreach ($weekLabels as $q): ?>
+                                <?php foreach ($weekLabels as $week): ?>
                                     <div class="border font-semibold rounded-xl p-2 text-center">
-                                        <?= $totals_by_quarter[$q] ?>
+                                        <?= $totals_by_quarter[$week]; ?>
                                     </div>
                                 <?php endforeach; ?>
 

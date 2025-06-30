@@ -195,3 +195,23 @@ function getAllTeams(PDO $pdo): array
         throw new Exception("Failed to get teams: " . $e->getMessage());
     }
 }
+
+function getMondayWeekOfMonth(DateTime $date)
+{
+    // Get the first day of the month
+    $firstOfMonth = new DateTime($date->format('Y-m-01'));
+
+    // Find the Monday on or before the first of the month
+    $firstMonday = clone $firstOfMonth;
+    if ($firstMonday->format('w') != 1) { // if not Monday
+        $firstMonday->modify('last monday');
+    }
+
+    // Difference in days from first Monday to current date
+    $daysDiff = $firstMonday->diff($date)->days;
+
+    // Week number = full weeks passed + 1
+    $weekNumber = intval(floor($daysDiff / 7)) + 1;
+
+    return "Week $weekNumber";
+}
